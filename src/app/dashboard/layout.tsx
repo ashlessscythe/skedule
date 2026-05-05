@@ -14,9 +14,15 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   const isAdmin = roleForTenant === 'ADMIN';
 
   return (
-    <div className="min-h-full bg-muted/30">
+    <div className="relative min-h-full bg-background">
+      <div className="pointer-events-none absolute inset-0 -z-10">
+        <div className="absolute -top-48 left-1/2 h-[520px] w-[920px] -translate-x-1/2 rounded-full bg-gradient-to-tr from-primary/20 via-purple-500/10 to-cyan-500/10 blur-3xl" />
+        <div className="absolute -bottom-40 right-[-120px] h-[420px] w-[520px] rounded-full bg-gradient-to-tr from-emerald-500/10 via-primary/10 to-fuchsia-500/10 blur-3xl" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,theme(colors.foreground/0.05),transparent_55%)]" />
+      </div>
+
       <div className="mx-auto grid w-full max-w-6xl gap-6 px-6 py-8 lg:grid-cols-[240px_1fr]">
-        <aside className="rounded-lg border bg-card p-3">
+        <aside className="rounded-xl border border-border/60 bg-card/70 p-3 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-card/50">
           <div className="px-3 py-2 text-sm font-semibold tracking-tight">Dashboard</div>
           <nav className="mt-1 flex flex-col gap-1">
             <Link
