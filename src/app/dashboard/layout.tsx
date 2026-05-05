@@ -58,6 +58,33 @@ export default async function DashboardLayout({ children }: { children: ReactNod
                 >
                   Admin home
                 </Link>
+                <Link
+                  href="/dashboard/admin/locations"
+                  className={cn(
+                    buttonVariants({ variant: 'ghost', size: 'sm' }),
+                    'justify-start'
+                  )}
+                >
+                  Locations
+                </Link>
+                <Link
+                  href="/dashboard/admin/appointment-types"
+                  className={cn(
+                    buttonVariants({ variant: 'ghost', size: 'sm' }),
+                    'justify-start'
+                  )}
+                >
+                  Appointment types
+                </Link>
+                <Link
+                  href="/dashboard/admin/availability"
+                  className={cn(
+                    buttonVariants({ variant: 'ghost', size: 'sm' }),
+                    'justify-start'
+                  )}
+                >
+                  Availability
+                </Link>
               </>
             ) : null}
           </nav>
