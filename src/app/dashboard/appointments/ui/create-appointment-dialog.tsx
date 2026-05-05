@@ -153,8 +153,8 @@ export function CreateAppointmentDialog(props: {
               <Select
                 value={typeId}
                 onValueChange={(v) => {
-                  setTypeId(v);
-                  const found = props.types.find((t) => t.id === v);
+                  setTypeId(v ?? '');
+                  const found = v ? props.types.find((t) => t.id === v) : undefined;
                   if (found?.durationMinutes) setDurationMinutes(found.durationMinutes);
                 }}
               >
