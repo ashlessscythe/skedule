@@ -6,6 +6,24 @@ Multi-tenant appointment management platform (Next.js App Router + Prisma + Neon
 
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Delivery Phases (feature roadmap)
+
+- **Phase 0 (completed)**: Dashboard shell + navigation + admin section scaffold
+  - Sidebar navigation in `/dashboard`
+  - Role-gated admin area scaffold (`/dashboard/admin`)
+- **Phase 1 (completed)**: Staff MVP scheduling primitives
+  - Clients list + create (UI) and `GET/POST/PATCH /api/clients`
+  - Intake link generation from clients UI (uses `POST /api/intake-tokens`)
+  - Appointment create (UI) and `PATCH/DELETE /api/appointments/[id]`
+- **Phase 2 (in progress)**: Admin setup UI
+  - Locations CRUD UI (`/api/locations`)
+  - Appointment types CRUD UI (`/api/appointment-types`)
+  - Availability CRUD UI (`/api/availability`)
+- **Phase 3**: Signup + PENDING approval workflow + Turnstile + emails
+- **Phase 4**: Appointment/intake communication templates + triggers (Resend)
+- **Phase 5**: QR/PDF operational UI + audit/check-in enhancements
+- **Phase 6**: Reporting filters/utilization + audit log viewer
+
 ## Getting Started
 
 First, run the development server:
