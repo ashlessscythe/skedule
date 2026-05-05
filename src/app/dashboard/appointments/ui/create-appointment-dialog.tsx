@@ -49,6 +49,16 @@ export function CreateAppointmentDialog(props: {
   async function onCreate(e: React.FormEvent) {
     e.preventDefault();
     if (!canCreate) return;
+    const start = new Date(startTime);
+    const end = new Date(endTime);
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      setError('Please enter a valid start and end time.');
+      return;
+    }
+    if (start >= end) {
+      setError('End time must be after start time.');
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -60,8 +70,8 @@ export function CreateAppointmentDialog(props: {
           clientId,
           staffId: staffId || null,
           typeId: typeId || null,
-          startTime: new Date(startTime).toISOString(),
-          endTime: new Date(endTime).toISOString(),
+          startTime: start.toISOString(),
+          endTime: end.toISOString(),
           notes: notes || null,
         }),
       });

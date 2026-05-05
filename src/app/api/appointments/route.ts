@@ -38,94 +38,107 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const ctx = await getTenantContext();
-  const json = await req.json();
-  const input = CreateAppointmentSchema.parse(json);
+  try {
+    const ctx = await getTenantContext();
+    const json = await req.json();
+    const input = CreateAppointmentSchema.parse(json);
 
-  const start = new Date(input.startTime);
-  const end = new Date(input.endTime);
-  if (!(start instanceof Date) || isNaN(start.getTime())) throw new Error('Invalid startTime');
-  if (!(end instanceof Date) || isNaN(end.getTime())) throw new Error('Invalid endTime');
-  if (start >= end) throw new Error('Invalid time range');
+    const start = new Date(input.startTime);
+    const end = new Date(input.endTime);
+    if (!(start instanceof Date) || isNaN(start.getTime()))
+      return NextResponse.json({ error: 'Invalid start time' }, { status: 400 });
+    if (!(end instanceof Date) || isNaN(end.getTime()))
+      return NextResponse.json({ error: 'Invalid end time' }, { status: 400 });
+    if (start >= end)
+      return NextResponse.json({ error: 'End time must be after start time' }, { status: 400 });
 
-  await assertWithinAvailability({
-    tenantId: ctx.tenantId,
-    locationId: input.locationId,
-    staffId: input.staffId ?? null,
-    startTimeUtc: start,
-    endTimeUtc: end,
-  });
-  await assertNoConflict({
-    tenantId: ctx.tenantId,
-    staffId: input.staffId ?? null,
-    locationId: input.locationId,
-    startTimeUtc: start,
-    endTimeUtc: end,
-  });
-
-  const recurrenceRuleId = input.recurrenceRule
-    ? (
-        await prisma.recurrenceRule.create({
-          data: {
-            tenantId: ctx.tenantId,
-            frequency: input.recurrenceRule.frequency,
-            interval: input.recurrenceRule.interval ?? 1,
-            byWeekDay: input.recurrenceRule.byWeekDay
-              ? input.recurrenceRule.byWeekDay.join(',')
-              : null,
-            byMonthDay: input.recurrenceRule.byMonthDay
-              ? input.recurrenceRule.byMonthDay.join(',')
-              : null,
-            count: input.recurrenceRule.count ?? null,
-            until: input.recurrenceRule.until ? new Date(input.recurrenceRule.until) : null,
-          },
-          select: { id: true },
-        })
-      ).id
-    : null;
-
-  const created = await prisma.appointment.create({
-    data: {
+    await assertWithinAvailability({
       tenantId: ctx.tenantId,
       locationId: input.locationId,
-      clientId: input.clientId,
       staffId: input.staffId ?? null,
-      typeId: input.typeId ?? null,
-      startTime: start,
-      endTime: end,
-      notes: input.notes ?? null,
-      recurrenceRuleId,
-    },
-  });
+      startTimeUtc: start,
+      endTimeUtc: end,
+    });
+    await assertNoConflict({
+      tenantId: ctx.tenantId,
+      staffId: input.staffId ?? null,
+      locationId: input.locationId,
+      startTimeUtc: start,
+      endTimeUtc: end,
+    });
 
-  await writeAuditLog({
-    tenantId: ctx.tenantId,
-    userId: ctx.userId,
-    action: 'APPOINTMENT_CREATED',
-    entityType: 'Appointment',
-    entityId: created.id,
-    appointmentId: created.id,
-    clientId: created.clientId,
-    metadata: {
-      locationId: created.locationId,
-      staffId: created.staffId,
-      startTime: created.startTime,
-      endTime: created.endTime,
-      recurrenceRuleId,
-    },
-  });
+    const recurrenceRuleId = input.recurrenceRule
+      ? (
+          await prisma.recurrenceRule.create({
+            data: {
+              tenantId: ctx.tenantId,
+              frequency: input.recurrenceRule.frequency,
+              interval: input.recurrenceRule.interval ?? 1,
+              byWeekDay: input.recurrenceRule.byWeekDay
+                ? input.recurrenceRule.byWeekDay.join(',')
+                : null,
+              byMonthDay: input.recurrenceRule.byMonthDay
+                ? input.recurrenceRule.byMonthDay.join(',')
+                : null,
+              count: input.recurrenceRule.count ?? null,
+              until: input.recurrenceRule.until
+                ? new Date(input.recurrenceRule.until)
+                : null,
+            },
+            select: { id: true },
+          })
+        ).id
+      : null;
 
-  const rrule = input.recurrenceRule
-    ? toRRuleString({
-        frequency: input.recurrenceRule.frequency,
-        interval: input.recurrenceRule.interval,
-        byWeekDay: input.recurrenceRule.byWeekDay?.join(',') ?? null,
-        byMonthDay: input.recurrenceRule.byMonthDay?.join(',') ?? null,
-        count: input.recurrenceRule.count ?? null,
-        until: input.recurrenceRule.until ? new Date(input.recurrenceRule.until) : null,
-      })
-    : null;
+    const created = await prisma.appointment.create({
+      data: {
+        tenantId: ctx.tenantId,
+        locationId: input.locationId,
+        clientId: input.clientId,
+        staffId: input.staffId ?? null,
+        typeId: input.typeId ?? null,
+        startTime: start,
+        endTime: end,
+        notes: input.notes ?? null,
+        recurrenceRuleId,
+      },
+    });
 
-  return NextResponse.json({ ...created, rrule }, { status: 201 });
+    await writeAuditLog({
+      tenantId: ctx.tenantId,
+      userId: ctx.userId,
+      action: 'APPOINTMENT_CREATED',
+      entityType: 'Appointment',
+      entityId: created.id,
+      appointmentId: created.id,
+      clientId: created.clientId,
+      metadata: {
+        locationId: created.locationId,
+        staffId: created.staffId,
+        startTime: created.startTime,
+        endTime: created.endTime,
+        recurrenceRuleId,
+      },
+    });
+
+    const rrule = input.recurrenceRule
+      ? toRRuleString({
+          frequency: input.recurrenceRule.frequency,
+          interval: input.recurrenceRule.interval,
+          byWeekDay: input.recurrenceRule.byWeekDay?.join(',') ?? null,
+          byMonthDay: input.recurrenceRule.byMonthDay?.join(',') ?? null,
+          count: input.recurrenceRule.count ?? null,
+          until: input.recurrenceRule.until ? new Date(input.recurrenceRule.until) : null,
+        })
+      : null;
+
+    return NextResponse.json({ ...created, rrule }, { status: 201 });
+  } catch (e) {
+    if (e instanceof z.ZodError) {
+      return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
+    }
+    const msg = e instanceof Error ? e.message : 'Unable to create appointment';
+    return NextResponse.json({ error: msg }, { status: 400 });
+  }
 }
 
