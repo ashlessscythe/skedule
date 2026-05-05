@@ -13,7 +13,8 @@ const CreateAppointmentSchema = z.object({
   staffId: z.string().min(1).optional().nullable(),
   typeId: z.string().min(1).optional().nullable(),
   startTime: z.string().datetime(),
-  endTime: z.string().datetime(),
+  endTime: z.string().datetime().optional(),
+  durationMinutes: z.number().int().min(15).optional(),
   notes: z.string().optional().nullable(),
   recurrenceRule: z
     .object({
@@ -44,11 +45,24 @@ export async function POST(req: Request) {
     const input = CreateAppointmentSchema.parse(json);
 
     const start = new Date(input.startTime);
-    const end = new Date(input.endTime);
+    const end = input.durationMinutes
+      ? new Date(start.getTime() + input.durationMinutes * 60 * 1000)
+      : input.endTime
+        ? new Date(input.endTime)
+        : null;
     if (!(start instanceof Date) || isNaN(start.getTime()))
       return NextResponse.json({ error: 'Invalid start time' }, { status: 400 });
-    if (!(end instanceof Date) || isNaN(end.getTime()))
-      return NextResponse.json({ error: 'Invalid end time' }, { status: 400 });
+    if (!end || !(end instanceof Date) || isNaN(end.getTime()))
+      return NextResponse.json(
+        { error: 'Provide either durationMinutes or endTime' },
+        { status: 400 }
+      );
+    if (input.durationMinutes && input.durationMinutes % 15 !== 0) {
+      return NextResponse.json(
+        { error: 'Duration must be in 15-minute increments' },
+        { status: 400 }
+      );
+    }
     if (start >= end)
       return NextResponse.json({ error: 'End time must be after start time' }, { status: 400 });
 

@@ -54,7 +54,7 @@ export default async function AppointmentsPage() {
     prisma.appointmentType.findMany({
       where: { tenantId: ctx.tenantId },
       orderBy: { name: 'asc' },
-      select: { id: true, name: true },
+      select: { id: true, name: true, durationMinutes: true },
     }),
   ]);
 
@@ -96,7 +96,11 @@ export default async function AppointmentsPage() {
                 id: u!.id,
                 label: `${u!.firstName} ${u!.lastName}`.trim() || u!.email,
               }))}
-            types={types.map((t) => ({ id: t.id, label: t.name }))}
+            types={types.map((t) => ({
+              id: t.id,
+              label: t.name,
+              durationMinutes: t.durationMinutes,
+            }))}
           />
         </div>
       </div>

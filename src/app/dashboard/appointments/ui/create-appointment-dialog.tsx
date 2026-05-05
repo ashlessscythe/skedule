@@ -24,12 +24,13 @@ import {
 } from '@/components/ui/select';
 
 type Option = { id: string; label: string };
+type TypeOption = Option & { durationMinutes?: number };
 
 export function CreateAppointmentDialog(props: {
   locations: Option[];
   clients: Option[];
   staff: Option[];
-  types: Option[];
+  types: TypeOption[];
 }) {
   const [open, setOpen] = useState(false);
   const [locationId, setLocationId] = useState<string>(props.locations[0]?.id ?? '');
@@ -37,28 +38,28 @@ export function CreateAppointmentDialog(props: {
   const [staffId, setStaffId] = useState<string>('');
   const [typeId, setTypeId] = useState<string>('');
   const [startTime, setStartTime] = useState<string>('');
-  const [endTime, setEndTime] = useState<string>('');
+  const [durationMinutes, setDurationMinutes] = useState<number>(30);
   const [notes, setNotes] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const canCreate = useMemo(() => {
-    return Boolean(locationId && clientId && startTime && endTime);
-  }, [locationId, clientId, startTime, endTime]);
+    return Boolean(locationId && clientId && startTime && durationMinutes > 0);
+  }, [locationId, clientId, startTime, durationMinutes]);
 
   async function onCreate(e: React.FormEvent) {
     e.preventDefault();
     if (!canCreate) return;
     const start = new Date(startTime);
-    const end = new Date(endTime);
-    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-      setError('Please enter a valid start and end time.');
+    if (isNaN(start.getTime())) {
+      setError('Please enter a valid start time.');
       return;
     }
-    if (start >= end) {
-      setError('End time must be after start time.');
+    if (durationMinutes % 15 !== 0) {
+      setError('Duration must be in 15-minute increments.');
       return;
     }
+    const end = new Date(start.getTime() + durationMinutes * 60 * 1000);
     setLoading(true);
     setError(null);
     try {
@@ -71,7 +72,7 @@ export function CreateAppointmentDialog(props: {
           staffId: staffId || null,
           typeId: typeId || null,
           startTime: start.toISOString(),
-          endTime: end.toISOString(),
+          durationMinutes,
           notes: notes || null,
         }),
       });
@@ -142,7 +143,14 @@ export function CreateAppointmentDialog(props: {
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
               <Label>Service (optional)</Label>
-              <Select value={typeId} onValueChange={setTypeId}>
+              <Select
+                value={typeId}
+                onValueChange={(v) => {
+                  setTypeId(v);
+                  const found = props.types.find((t) => t.id === v);
+                  if (found?.durationMinutes) setDurationMinutes(found.durationMinutes);
+                }}
+              >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select a type" />
                 </SelectTrigger>
@@ -193,14 +201,25 @@ export function CreateAppointmentDialog(props: {
               />
             </div>
             <div className="space-y-1">
-              <Label htmlFor="endTime">End</Label>
-              <Input
-                id="endTime"
-                type="datetime-local"
-                value={endTime}
-                onChange={(e) => setEndTime(e.target.value)}
-                required
-              />
+              <Label>Duration</Label>
+              <Select
+                value={String(durationMinutes)}
+                onValueChange={(v) => setDurationMinutes(parseInt(v, 10))}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select duration" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectLabel>Duration (minutes)</SelectLabel>
+                    {[15, 30, 45, 60, 75, 90, 105, 120].map((m) => (
+                      <SelectItem key={m} value={String(m)}>
+                        {m} min
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
