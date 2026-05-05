@@ -106,7 +106,7 @@ export function CreateAppointmentDialog(props: {
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
               <Label>Location</Label>
-              <Select value={locationId} onValueChange={setLocationId}>
+              <Select value={locationId} onValueChange={(v) => setLocationId(v ?? '')}>
                 <SelectTrigger className="w-full">
                   <span className={locationId ? '' : 'text-muted-foreground'}>
                     {locationId ? findLabel(props.locations, locationId) : 'Select a location'}
@@ -127,7 +127,7 @@ export function CreateAppointmentDialog(props: {
 
             <div className="space-y-1">
               <Label>Client</Label>
-              <Select value={clientId} onValueChange={setClientId}>
+              <Select value={clientId} onValueChange={(v) => setClientId(v ?? '')}>
                 <SelectTrigger className="w-full">
                   <span className={clientId ? '' : 'text-muted-foreground'}>
                     {clientId ? findLabel(props.clients, clientId) : 'Select a client'}
@@ -179,7 +179,7 @@ export function CreateAppointmentDialog(props: {
 
             <div className="space-y-1">
               <Label>Staff (optional)</Label>
-              <Select value={staffId} onValueChange={setStaffId}>
+              <Select value={staffId} onValueChange={(v) => setStaffId(v ?? '')}>
                 <SelectTrigger className="w-full">
                   <span className={staffId ? '' : 'text-muted-foreground'}>
                     {staffId ? findLabel(props.staff, staffId) : 'Unassigned'}
