@@ -174,7 +174,7 @@ export function CreateAvailabilityDialog(props: {
                 <Label>Day of week</Label>
                 <Select
                   value={String(dayOfWeek)}
-                  onValueChange={(v) => setDayOfWeek(parseInt(v, 10))}
+                  onValueChange={(v) => setDayOfWeek(parseInt(v ?? '0', 10))}
                 >
                   <SelectTrigger className="w-full">
                     <span>
