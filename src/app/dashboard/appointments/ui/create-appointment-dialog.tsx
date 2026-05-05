@@ -20,11 +20,14 @@ import {
   SelectItem,
   SelectLabel,
   SelectTrigger,
-  SelectValue,
 } from '@/components/ui/select';
 
 type Option = { id: string; label: string };
 type TypeOption = Option & { durationMinutes?: number };
+
+function findLabel(options: Option[], id: string) {
+  return options.find((o) => o.id === id)?.label ?? '';
+}
 
 export function CreateAppointmentDialog(props: {
   locations: Option[];
@@ -105,7 +108,9 @@ export function CreateAppointmentDialog(props: {
               <Label>Location</Label>
               <Select value={locationId} onValueChange={setLocationId}>
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select a location" />
+                  <span className={locationId ? '' : 'text-muted-foreground'}>
+                    {locationId ? findLabel(props.locations, locationId) : 'Select a location'}
+                  </span>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
@@ -124,7 +129,9 @@ export function CreateAppointmentDialog(props: {
               <Label>Client</Label>
               <Select value={clientId} onValueChange={setClientId}>
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select a client" />
+                  <span className={clientId ? '' : 'text-muted-foreground'}>
+                    {clientId ? findLabel(props.clients, clientId) : 'Select a client'}
+                  </span>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
@@ -152,7 +159,9 @@ export function CreateAppointmentDialog(props: {
                 }}
               >
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select a type" />
+                  <span className={typeId ? '' : 'text-muted-foreground'}>
+                    {typeId ? findLabel(props.types, typeId) : 'Select a type'}
+                  </span>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
@@ -172,7 +181,9 @@ export function CreateAppointmentDialog(props: {
               <Label>Staff (optional)</Label>
               <Select value={staffId} onValueChange={setStaffId}>
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Unassigned" />
+                  <span className={staffId ? '' : 'text-muted-foreground'}>
+                    {staffId ? findLabel(props.staff, staffId) : 'Unassigned'}
+                  </span>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
@@ -207,7 +218,7 @@ export function CreateAppointmentDialog(props: {
                 onValueChange={(v) => setDurationMinutes(parseInt(v, 10))}
               >
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select duration" />
+                  <span>{durationMinutes} min</span>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
