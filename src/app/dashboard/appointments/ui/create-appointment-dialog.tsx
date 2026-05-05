@@ -215,7 +215,7 @@ export function CreateAppointmentDialog(props: {
               <Label>Duration</Label>
               <Select
                 value={String(durationMinutes)}
-                onValueChange={(v) => setDurationMinutes(parseInt(v, 10))}
+                onValueChange={(v) => setDurationMinutes(parseInt(v ?? '30', 10))}
               >
                 <SelectTrigger className="w-full">
                   <span>{durationMinutes} min</span>
