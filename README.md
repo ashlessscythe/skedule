@@ -15,7 +15,7 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
   - Clients list + create (UI) and `GET/POST/PATCH /api/clients`
   - Intake link generation from clients UI (uses `POST /api/intake-tokens`)
   - Appointment create (UI) and `PATCH/DELETE /api/appointments/[id]`
-- **Phase 2 (in progress)**: Admin setup UI
+- **Phase 2 (completed)**: Admin setup UI
   - Locations CRUD UI (`/api/locations`)
   - Appointment types CRUD UI (`/api/appointment-types`)
   - Availability CRUD UI (`/api/availability`)
