@@ -117,6 +117,104 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+html.theme-day {
+  /* Uses :root defaults */
+}
+
+html.theme-night {
+  /* Dark baseline with slightly crisper accents */
+  --primary: oklch(0.93 0.02 270);
+  --primary-foreground: oklch(0.2 0 0);
+  --ring: oklch(0.72 0.03 270);
+}
+
+html.theme-corporate {
+  /* Clean, restrained, high-contrast light theme */
+  --background: oklch(0.99 0.004 250);
+  --foreground: oklch(0.18 0.01 260);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.18 0.01 260);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.18 0.01 260);
+  --primary: oklch(0.36 0.12 262);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.965 0.01 250);
+  --secondary-foreground: oklch(0.22 0.01 260);
+  --muted: oklch(0.97 0.01 250);
+  --muted-foreground: oklch(0.56 0.01 260);
+  --accent: oklch(0.965 0.01 250);
+  --accent-foreground: oklch(0.22 0.01 260);
+  --border: oklch(0.91 0.01 250);
+  --input: oklch(0.91 0.01 250);
+  --ring: oklch(0.62 0.06 262);
+}
+
+html.theme-neon {
+  /* Vivid dark theme: electric highlights */
+  --background: oklch(0.13 0.02 280);
+  --foreground: oklch(0.98 0 0);
+  --card: oklch(0.18 0.02 280);
+  --card-foreground: oklch(0.98 0 0);
+  --popover: oklch(0.18 0.02 280);
+  --popover-foreground: oklch(0.98 0 0);
+  --primary: oklch(0.78 0.22 312);
+  --primary-foreground: oklch(0.16 0.02 280);
+  --secondary: oklch(0.24 0.02 280);
+  --secondary-foreground: oklch(0.98 0 0);
+  --muted: oklch(0.24 0.02 280);
+  --muted-foreground: oklch(0.72 0.03 280);
+  --accent: oklch(0.75 0.18 195);
+  --accent-foreground: oklch(0.16 0.02 280);
+  --border: oklch(1 0 0 / 14%);
+  --input: oklch(1 0 0 / 18%);
+  --ring: oklch(0.78 0.18 195);
+}
+
+html.theme-cyberpunk {
+  /* High-chroma dark theme: magenta/cyan with warm surface */
+  --background: oklch(0.14 0.03 20);
+  --foreground: oklch(0.98 0 0);
+  --card: oklch(0.2 0.03 20);
+  --card-foreground: oklch(0.98 0 0);
+  --popover: oklch(0.2 0.03 20);
+  --popover-foreground: oklch(0.98 0 0);
+  --primary: oklch(0.78 0.23 324);
+  --primary-foreground: oklch(0.16 0.03 20);
+  --secondary: oklch(0.26 0.03 20);
+  --secondary-foreground: oklch(0.98 0 0);
+  --muted: oklch(0.26 0.03 20);
+  --muted-foreground: oklch(0.74 0.03 20);
+  --accent: oklch(0.8 0.21 195);
+  --accent-foreground: oklch(0.16 0.03 20);
+  --border: oklch(1 0 0 / 16%);
+  --input: oklch(1 0 0 / 20%);
+  --ring: oklch(0.8 0.21 195);
+}
+
+@layer utilities {
+  .animate-gradient-text {
+    animation: gradientText 8s ease infinite;
+  }
+
+  @keyframes gradientText {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-gradient-text {
+      animation: none;
+    }
+  }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
