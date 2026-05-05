@@ -3,6 +3,9 @@ import { getTenantContext } from '@/lib/tenant-context';
 import { Badge } from '@/components/ui/badge';
 import type { VariantProps } from 'class-variance-authority';
 import { badgeVariants } from '@/components/ui/badge';
+import Link from 'next/link';
+import { buttonVariants } from '@/components/ui/button';
+import { CreateAppointmentDialog } from './ui/create-appointment-dialog';
 import {
   Table,
   TableBody,
@@ -32,6 +35,29 @@ function statusVariant(status: string): BadgeVariant {
 export default async function AppointmentsPage() {
   const ctx = await getTenantContext();
 
+  const [locations, clients, staffUsers, types] = await Promise.all([
+    prisma.location.findMany({
+      where: { tenantId: ctx.tenantId, deletedAt: null },
+      orderBy: { name: 'asc' },
+      select: { id: true, name: true },
+    }),
+    prisma.client.findMany({
+      where: { tenantId: ctx.tenantId, deletedAt: null },
+      orderBy: [{ lastName: 'asc' }, { firstName: 'asc' }],
+      select: { id: true, firstName: true, lastName: true },
+      take: 200,
+    }),
+    prisma.userTenant.findMany({
+      where: { tenantId: ctx.tenantId, status: 'ACTIVE' },
+      select: { user: { select: { id: true, firstName: true, lastName: true, email: true } } },
+    }),
+    prisma.appointmentType.findMany({
+      where: { tenantId: ctx.tenantId },
+      orderBy: { name: 'asc' },
+      select: { id: true, name: true },
+    }),
+  ]);
+
   const appointments = await prisma.appointment.findMany({
     where: { tenantId: ctx.tenantId, deletedAt: null },
     orderBy: { startTime: 'asc' },
@@ -52,6 +78,26 @@ export default async function AppointmentsPage() {
           <p className="text-sm text-muted-foreground">
             Showing latest 50 appointments for your active tenant.
           </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Link href="/dashboard/clients" className={buttonVariants({ variant: 'outline' })}>
+            New client
+          </Link>
+          <CreateAppointmentDialog
+            locations={locations.map((l) => ({ id: l.id, label: l.name }))}
+            clients={clients.map((c) => ({
+              id: c.id,
+              label: `${c.lastName}, ${c.firstName}`,
+            }))}
+            staff={staffUsers
+              .map((s) => s.user)
+              .filter(Boolean)
+              .map((u) => ({
+                id: u!.id,
+                label: `${u!.firstName} ${u!.lastName}`.trim() || u!.email,
+              }))}
+            types={types.map((t) => ({ id: t.id, label: t.name }))}
+          />
         </div>
       </div>
 
