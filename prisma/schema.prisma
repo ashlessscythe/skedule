@@ -1,0 +1,291 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider          = "postgresql"
+  url               = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  STAFF
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum AuditActionType {
+  APPOINTMENT_CREATED
+  APPOINTMENT_UPDATED
+  APPOINTMENT_CANCELLED
+  APPOINTMENT_STATUS_CHANGED
+  CLIENT_CREATED
+  CLIENT_UPDATED
+  USER_LOGIN
+  USER_LOGOUT
+  USER_CREATED
+  USER_UPDATED
+}
+
+model Tenant {
+  id              String           @id @default(cuid())
+  name            String
+  slug            String           @unique
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  deletedAt       DateTime?
+
+  locations       Location[]
+  users           UserTenant[]
+  clients         Client[]
+  appointments    Appointment[]
+  appointmentTypes AppointmentType[]
+  availabilities  Availability[]
+  auditLogs       AuditLog[]
+  branding        Branding?
+  recurrenceRules RecurrenceRule[]
+  intakeTokens    IntakeToken[]
+  qrTokens        QrToken[]
+
+  @@index([deletedAt])
+}
+
+model Location {
+  id           String        @id @default(cuid())
+  tenantId     String
+  name         String
+  addressLine1 String?
+  addressLine2 String?
+  city         String?
+  state        String?
+  postalCode   String?
+  country      String?
+  timeZone     String        // IANA timezone identifier, e.g. "America/New_York"
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  deletedAt    DateTime?
+
+  tenant       Tenant        @relation(fields: [tenantId], references: [id])
+  appointments Appointment[]
+  availabilities Availability[]
+
+  @@index([tenantId])
+  @@index([tenantId, deletedAt])
+}
+
+model User {
+  id           String        @id @default(cuid())
+  email        String        @unique
+  passwordHash String
+  firstName    String
+  lastName     String
+  isActive     Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  tenants      UserTenant[]
+  appointments Appointment[] @relation("AppointmentStaff")
+  auditLogs    AuditLog[]
+  availabilities Availability[]
+}
+
+model UserTenant {
+  id               String      @id @default(cuid())
+  userId           String
+  tenantId         String
+  role             Role
+
+  user             User        @relation(fields: [userId], references: [id])
+  tenant           Tenant      @relation(fields: [tenantId], references: [id])
+
+  createdAt        DateTime    @default(now())
+
+  @@unique([userId, tenantId])
+  @@index([tenantId, role])
+}
+
+model Client {
+  id          String        @id @default(cuid())
+  tenantId    String
+  firstName   String
+  lastName    String
+  email       String?
+  phone       String?
+  dateOfBirth DateTime?
+  metadata    Json?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  deletedAt   DateTime?
+
+  tenant      Tenant        @relation(fields: [tenantId], references: [id])
+  appointments Appointment[]
+  intakeTokens IntakeToken[]
+  auditLogs   AuditLog[]
+
+  @@index([tenantId])
+  @@index([tenantId, deletedAt])
+}
+
+model AppointmentType {
+  id              String        @id @default(cuid())
+  tenantId        String
+  name            String
+  description     String?
+  durationMinutes Int
+  color           String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  tenant          Tenant        @relation(fields: [tenantId], references: [id])
+  appointments    Appointment[]
+
+  @@index([tenantId])
+}
+
+model Appointment {
+  id               String           @id @default(cuid())
+  tenantId         String
+  locationId       String
+  clientId         String
+  staffId          String?
+  typeId           String?
+  startTime        DateTime
+  endTime          DateTime
+  status           AppointmentStatus @default(SCHEDULED)
+  notes            String?
+  recurrenceRuleId String?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  deletedAt        DateTime?
+
+  tenant           Tenant          @relation(fields: [tenantId], references: [id])
+  location         Location        @relation(fields: [locationId], references: [id])
+  client           Client          @relation(fields: [clientId], references: [id])
+  staff            User?           @relation("AppointmentStaff", fields: [staffId], references: [id])
+  type             AppointmentType? @relation(fields: [typeId], references: [id])
+  recurrenceRule   RecurrenceRule? @relation(fields: [recurrenceRuleId], references: [id])
+
+  intakeTokens     IntakeToken[]
+  qrTokens         QrToken[]
+  auditLogs        AuditLog[]
+
+  @@index([tenantId])
+  @@index([tenantId, locationId])
+  @@index([tenantId, clientId])
+  @@index([tenantId, status])
+  @@index([tenantId, startTime])
+}
+
+model RecurrenceRule {
+  id          String        @id @default(cuid())
+  tenantId    String
+  frequency   String
+  interval    Int           @default(1)
+  byWeekDay   String?
+  byMonthDay  String?
+  count       Int?
+  until       DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  tenant      Tenant        @relation(fields: [tenantId], references: [id])
+  appointments Appointment[]
+
+  @@index([tenantId])
+}
+
+model Availability {
+  id            String     @id @default(cuid())
+  tenantId      String
+  locationId    String
+  staffId       String?
+  dayOfWeek     Int?
+  startTimeLocal String?
+  endTimeLocal   String?
+  specificDate  DateTime?
+  isBlocked     Boolean    @default(false)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  tenant        Tenant     @relation(fields: [tenantId], references: [id])
+  location      Location   @relation(fields: [locationId], references: [id])
+  staff         User?      @relation(fields: [staffId], references: [id])
+
+  @@index([tenantId, locationId])
+}
+
+model IntakeToken {
+  id            String       @id @default(cuid())
+  tenantId      String
+  appointmentId String?
+  clientId      String?
+  token         String       @unique
+  expiresAt     DateTime
+  usedAt        DateTime?
+  createdAt     DateTime     @default(now())
+
+  tenant        Tenant       @relation(fields: [tenantId], references: [id])
+  appointment   Appointment? @relation(fields: [appointmentId], references: [id])
+  client        Client?      @relation(fields: [clientId], references: [id])
+
+  @@index([tenantId])
+}
+
+model QrToken {
+  id            String       @id @default(cuid())
+  tenantId      String
+  appointmentId String
+  token         String       @unique
+  expiresAt     DateTime
+  usedAt        DateTime?
+  createdAt     DateTime     @default(now())
+
+  tenant        Tenant       @relation(fields: [tenantId], references: [id])
+  appointment   Appointment  @relation(fields: [appointmentId], references: [id])
+
+  @@index([tenantId])
+}
+
+model AuditLog {
+  id         String        @id @default(cuid())
+  tenantId   String
+  userId     String?
+  action     AuditActionType
+  entityType String
+  entityId   String
+  appointmentId String?
+  clientId     String?
+  metadata   Json?
+  createdAt  DateTime      @default(now())
+
+  tenant     Tenant        @relation(fields: [tenantId], references: [id])
+  user       User?         @relation(fields: [userId], references: [id])
+  appointment Appointment? @relation(fields: [appointmentId], references: [id])
+  client      Client?      @relation(fields: [clientId], references: [id])
+
+  @@index([tenantId, entityType])
+  @@index([tenantId, createdAt])
+  @@index([tenantId, appointmentId])
+}
+
+model Branding {
+  id               String   @id @default(cuid())
+  tenantId         String   @unique
+  logoUrl          String?
+  primaryColor     String?
+  secondaryColor   String?
+  accentColor      String?
+  emailFromName    String?
+  emailFromAddress String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  tenant           Tenant   @relation(fields: [tenantId], references: [id])
+}
+
