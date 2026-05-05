@@ -8,8 +8,8 @@ import { Button } from '@/components/ui/button';
 export function LoginForm() {
   const searchParams = useSearchParams();
   const next = searchParams.get('next') ?? '/dashboard';
-  const [email, setEmail] = useState('admin@acmehealth.test');
-  const [password, setPassword] = useState('Admin123!');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 

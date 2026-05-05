@@ -37,7 +37,7 @@ export const authOptions: NextAuthOptions = {
           where: { email },
           include: {
             tenants: {
-              select: { tenantId: true, role: true },
+              select: { tenantId: true, role: true, status: true },
             },
           },
         });
@@ -46,10 +46,12 @@ export const authOptions: NextAuthOptions = {
         const ok = await bcrypt.compare(password, user.passwordHash);
         if (!ok) return null;
 
-        const roles: SessionRoleAssignment[] = user.tenants.map((t) => ({
-          tenantId: t.tenantId,
-          role: t.role,
-        }));
+        const roles: SessionRoleAssignment[] = user.tenants
+          .filter((t) => t.status === 'ACTIVE')
+          .map((t) => ({
+            tenantId: t.tenantId,
+            role: t.role,
+          }));
         if (roles.length === 0) return null;
 
         const authUser: AuthUser = {

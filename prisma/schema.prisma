@@ -13,6 +13,12 @@ enum Role {
   STAFF
 }
 
+enum MembershipStatus {
+  PENDING
+  ACTIVE
+  REJECTED
+}
+
 enum AppointmentStatus {
   SCHEDULED
   COMPLETED
@@ -100,6 +106,7 @@ model UserTenant {
   userId           String
   tenantId         String
   role             Role
+  status           MembershipStatus @default(ACTIVE)
 
   user             User        @relation(fields: [userId], references: [id])
   tenant           Tenant      @relation(fields: [tenantId], references: [id])
@@ -108,6 +115,7 @@ model UserTenant {
 
   @@unique([userId, tenantId])
   @@index([tenantId, role])
+  @@index([tenantId, status])
 }
 
 model Client {
