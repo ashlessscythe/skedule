@@ -109,7 +109,7 @@ export function CreateAvailabilityDialog(props: {
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
               <Label>Location</Label>
-              <Select value={locationId} onValueChange={setLocationId}>
+              <Select value={locationId} onValueChange={(v) => setLocationId(v ?? '')}>
                 <SelectTrigger className="w-full">
                   <span className={locationId ? '' : 'text-muted-foreground'}>
                     {locationId
@@ -132,7 +132,7 @@ export function CreateAvailabilityDialog(props: {
 
             <div className="space-y-1">
               <Label>Staff</Label>
-              <Select value={staffId} onValueChange={setStaffId}>
+              <Select value={staffId} onValueChange={(v) => setStaffId(v ?? '')}>
                 <SelectTrigger className="w-full">
                   <span className={staffId ? '' : 'text-muted-foreground'}>
                     {staffId ? findLabel(staffOptions, staffId) : 'All staff'}
