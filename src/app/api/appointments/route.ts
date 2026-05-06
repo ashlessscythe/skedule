@@ -10,6 +10,7 @@ import {
   toRRuleString,
 } from '@/lib/scheduling/recurrence';
 import { writeAuditLog } from '@/lib/audit';
+import { sendAppointmentBookedEmail } from '@/lib/email/appointment-emails';
 
 const RecurrencePayloadSchema = z
   .object({
@@ -211,6 +212,12 @@ export async function POST(req: Request) {
         },
       });
     }
+
+    const seriesExtra = Math.max(0, seriesAppointmentIds.length - 1);
+    void sendAppointmentBookedEmail({
+      appointmentId: createdFirst!.id,
+      ...(seriesExtra > 0 ? { seriesExtraCount: seriesExtra } : {}),
+    });
 
     return NextResponse.json(
       {

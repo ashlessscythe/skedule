@@ -168,6 +168,7 @@ model Appointment {
   status           AppointmentStatus @default(SCHEDULED)
   notes            String?
   recurrenceRuleId String?
+  reminderSentAt   DateTime?
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt
   deletedAt        DateTime?
@@ -188,6 +189,7 @@ model Appointment {
   @@index([tenantId, clientId])
   @@index([tenantId, status])
   @@index([tenantId, startTime])
+  @@index([tenantId, reminderSentAt, startTime])
 }
 
 model RecurrenceRule {

@@ -5,6 +5,11 @@ import { getTenantContext } from '@/lib/tenant-context';
 import { assertWithinAvailability } from '@/lib/scheduling/availability';
 import { assertNoConflict } from '@/lib/scheduling/conflicts';
 import { writeAuditLog } from '@/lib/audit';
+import {
+  apptEmailInclude,
+  sendAppointmentCancelledEmailForClient,
+  sendAppointmentUpdatedEmailForClient,
+} from '@/lib/email/appointment-emails';
 
 const UpdateAppointmentSchema = z.object({
   locationId: z.string().min(1).optional(),
@@ -29,7 +34,7 @@ export async function PATCH(
 
   const existing = await prisma.appointment.findFirst({
     where: { id, tenantId: ctx.tenantId, deletedAt: null },
-    select: { id: true, locationId: true, staffId: true, clientId: true, startTime: true, endTime: true },
+    include: apptEmailInclude,
   });
   if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
@@ -56,6 +61,14 @@ export async function PATCH(
     excludeAppointmentId: id,
   });
 
+  const nextStatus = input.status ?? existing.status;
+  const reminderReset =
+    existing.status === 'SCHEDULED' &&
+    nextStatus === 'SCHEDULED' &&
+    (start.getTime() !== existing.startTime.getTime() ||
+      end.getTime() !== existing.endTime.getTime() ||
+      locationId !== existing.locationId);
+
   const updated = await prisma.appointment.update({
     where: { id },
     data: {
@@ -67,7 +80,9 @@ export async function PATCH(
       ...(input.endTime ? { endTime: end } : {}),
       ...(input.notes !== undefined ? { notes: input.notes ?? null } : {}),
       ...(input.status ? { status: input.status } : {}),
+      ...(reminderReset ? { reminderSentAt: null } : {}),
     },
+    include: apptEmailInclude,
   });
 
   await writeAuditLog({
@@ -81,6 +96,21 @@ export async function PATCH(
     metadata: { fields: Object.keys(input) },
   });
 
+  const becameCancelled =
+    input.status === 'CANCELLED' && existing.status !== 'CANCELLED';
+  const rescheduledWhileScheduled =
+    updated.status === 'SCHEDULED' &&
+    !becameCancelled &&
+    (start.getTime() !== existing.startTime.getTime() ||
+      end.getTime() !== existing.endTime.getTime() ||
+      locationId !== existing.locationId);
+
+  if (becameCancelled) {
+    void sendAppointmentCancelledEmailForClient(updated);
+  } else if (rescheduledWhileScheduled) {
+    void sendAppointmentUpdatedEmailForClient(updated);
+  }
+
   return NextResponse.json(updated);
 }
 
@@ -93,9 +123,11 @@ export async function DELETE(
 
   const existing = await prisma.appointment.findFirst({
     where: { id, tenantId: ctx.tenantId, deletedAt: null },
-    select: { id: true, clientId: true },
+    include: apptEmailInclude,
   });
   if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+
+  void sendAppointmentCancelledEmailForClient(existing);
 
   const updated = await prisma.appointment.update({
     where: { id },

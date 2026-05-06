@@ -1,42 +1,24 @@
-export type AppointmentConfirmationTemplateInput = {
+export type AppointmentReminderTemplateInput = {
   tenantName: string;
   clientName: string;
   startTimeLocal: string;
   locationName: string;
-  manageUrl?: string;
-  /** When > 0, show a short note about additional occurrences in the same series. */
-  seriesExtraCount?: number;
 };
 
-export function renderAppointmentConfirmationEmail(
-  input: AppointmentConfirmationTemplateInput
-) {
-  const manage = input.manageUrl
-    ? `<p style="margin:16px 0 0 0"><a href="${input.manageUrl}">View details</a></p>`
-    : '';
-
-  const seriesNote =
-    input.seriesExtraCount != null && input.seriesExtraCount > 0
-      ? `<p style="margin: 12px 0 0 0; font-size: 14px;">
-          This booking is part of a recurring series — <strong>${input.seriesExtraCount}</strong> more occurrence(s) are scheduled at the same time of day.
-        </p>`
-      : '';
-
+export function renderAppointmentReminderEmail(input: AppointmentReminderTemplateInput) {
   const html = `<!doctype html>
 <html>
   <body style="font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; color: #0a0a0a;">
     <div style="max-width: 560px; margin: 0 auto; padding: 24px;">
-      <h1 style="font-size: 18px; margin: 0 0 12px 0;">Appointment confirmed</h1>
+      <h1 style="font-size: 18px; margin: 0 0 12px 0;">Reminder: upcoming appointment</h1>
       <p style="margin: 0 0 12px 0;">Hi ${escapeHtml(input.clientName)},</p>
       <p style="margin: 0 0 12px 0;">
-        Your appointment with <strong>${escapeHtml(input.tenantName)}</strong> is scheduled.
+        This is a reminder from <strong>${escapeHtml(input.tenantName)}</strong>.
       </p>
       <div style="border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px;">
         <div><strong>When:</strong> ${escapeHtml(input.startTimeLocal)}</div>
         <div style="margin-top: 6px;"><strong>Where:</strong> ${escapeHtml(input.locationName)}</div>
       </div>
-      ${seriesNote}
-      ${manage}
       <p style="margin: 20px 0 0 0; font-size: 12px; color: #6b7280;">
         This message was sent by Skedule on behalf of ${escapeHtml(input.tenantName)}.
       </p>
@@ -45,7 +27,7 @@ export function renderAppointmentConfirmationEmail(
 </html>`;
 
   return {
-    subject: `Appointment confirmed - ${input.tenantName}`,
+    subject: `Reminder: appointment at ${input.tenantName}`,
     html,
   };
 }
@@ -58,4 +40,3 @@ function escapeHtml(s: string) {
     .replaceAll('"', '&quot;')
     .replaceAll("'", '&#039;');
 }
-

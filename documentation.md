@@ -40,6 +40,17 @@ Email:
 - `RESEND_API_KEY` required only when `SEND_EMAIL="true"`
 - `EMAIL_FROM_DEFAULT` required only when `SEND_EMAIL="true"`
 
+When `SEND_EMAIL=true` and the client has an email address, the app sends:
+- **Confirmation** after creating an appointment (one email for the series; body notes extra occurrences when applicable)
+- **Updated** when time or location changes (still `SCHEDULED`)
+- **Cancelled** when status becomes `CANCELLED` or the appointment is deleted (soft cancel)
+
+**Reminder emails** (optional):
+- Set `CRON_SECRET` to a long random string.
+- Optionally set `REMINDER_HOURS_BEFORE` (default `24`).
+- Schedule HTTP `GET` or `POST` to `/api/cron/appointment-reminders` with header `Authorization: Bearer <CRON_SECRET>` or `x-cron-secret: <CRON_SECRET>`.
+- The job selects `SCHEDULED` appointments whose start time is about `REMINDER_HOURS_BEFORE` hours away (±30 minutes), with `reminderSentAt` null and a client email; after a successful send it sets `reminderSentAt`. Run cron at least hourly so the window is hit.
+
 ---
 
 ## Database
