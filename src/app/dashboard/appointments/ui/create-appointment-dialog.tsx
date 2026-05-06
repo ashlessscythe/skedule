@@ -46,9 +46,37 @@ export function CreateAppointmentDialog(props: {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [repeatEnabled, setRepeatEnabled] = useState(false);
+  const [recurrenceFrequency, setRecurrenceFrequency] = useState<'DAILY' | 'WEEKLY' | 'MONTHLY'>(
+    'WEEKLY'
+  );
+  const [recurrenceInterval, setRecurrenceInterval] = useState<number>(1);
+  const [recurrenceEndMode, setRecurrenceEndMode] = useState<'count' | 'until'>('count');
+  const [recurrenceCount, setRecurrenceCount] = useState<number>(10);
+  const [recurrenceUntil, setRecurrenceUntil] = useState<string>('');
+
   const canCreate = useMemo(() => {
-    return Boolean(locationId && clientId && startTime && durationMinutes > 0);
-  }, [locationId, clientId, startTime, durationMinutes]);
+    if (!locationId || !clientId || !startTime || durationMinutes <= 0) return false;
+    if (!repeatEnabled) return true;
+    if (recurrenceInterval < 1 || recurrenceInterval > 12) return false;
+    if (recurrenceEndMode === 'count') {
+      return recurrenceCount >= 2 && recurrenceCount <= 366;
+    }
+    if (!recurrenceUntil) return false;
+    const start = new Date(startTime);
+    const until = new Date(recurrenceUntil);
+    return !isNaN(start.getTime()) && !isNaN(until.getTime()) && until > start;
+  }, [
+    locationId,
+    clientId,
+    startTime,
+    durationMinutes,
+    repeatEnabled,
+    recurrenceInterval,
+    recurrenceEndMode,
+    recurrenceCount,
+    recurrenceUntil,
+  ]);
 
   async function onCreate(e: React.FormEvent) {
     e.preventDefault();
@@ -62,10 +90,23 @@ export function CreateAppointmentDialog(props: {
       setError('Duration must be in 15-minute increments.');
       return;
     }
-    const end = new Date(start.getTime() + durationMinutes * 60 * 1000);
     setLoading(true);
     setError(null);
     try {
+      const recurrenceRule = repeatEnabled
+        ? recurrenceEndMode === 'count'
+          ? {
+              frequency: recurrenceFrequency,
+              interval: recurrenceInterval,
+              count: recurrenceCount,
+            }
+          : {
+              frequency: recurrenceFrequency,
+              interval: recurrenceInterval,
+              until: new Date(recurrenceUntil).toISOString(),
+            }
+        : undefined;
+
       const res = await fetch('/api/appointments', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
@@ -77,6 +118,7 @@ export function CreateAppointmentDialog(props: {
           startTime: start.toISOString(),
           durationMinutes,
           notes: notes || null,
+          ...(recurrenceRule ? { recurrenceRule } : {}),
         }),
       });
       if (!res.ok) {
@@ -234,6 +276,111 @@ export function CreateAppointmentDialog(props: {
             </div>
           </div>
 
+          <div className="rounded-lg border bg-muted/30 p-4 space-y-3">
+            <div className="flex items-center gap-2">
+              <input
+                id="repeat"
+                type="checkbox"
+                className="h-4 w-4 rounded border-input"
+                checked={repeatEnabled}
+                onChange={(e) => setRepeatEnabled(e.target.checked)}
+              />
+              <Label htmlFor="repeat" className="font-medium cursor-pointer">
+                Repeating series
+              </Label>
+            </div>
+            {repeatEnabled ? (
+              <div className="space-y-3 pl-6 border-l-2 border-primary/20">
+                <p className="text-xs text-muted-foreground">
+                  Each occurrence is stored as its own appointment and shares one recurrence rule.
+                  All slots must pass availability and staff conflict checks.
+                </p>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <Label>Frequency</Label>
+                    <Select
+                      value={recurrenceFrequency}
+                      onValueChange={(v) =>
+                        setRecurrenceFrequency((v as 'DAILY' | 'WEEKLY' | 'MONTHLY') ?? 'WEEKLY')
+                      }
+                    >
+                      <SelectTrigger className="w-full">
+                        <span>{recurrenceFrequency}</span>
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="DAILY">Daily</SelectItem>
+                        <SelectItem value="WEEKLY">Weekly</SelectItem>
+                        <SelectItem value="MONTHLY">Monthly</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="recEvery">Every</Label>
+                    <Input
+                      id="recEvery"
+                      type="number"
+                      min={1}
+                      max={12}
+                      value={recurrenceInterval}
+                      onChange={(e) =>
+                        setRecurrenceInterval(Math.min(12, Math.max(1, parseInt(e.target.value, 10) || 1)))
+                      }
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      e.g. 2 + Weekly = every 2 weeks (same weekday as start).
+                    </p>
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <Label>Ends</Label>
+                  <Select
+                    value={recurrenceEndMode}
+                    onValueChange={(v) => setRecurrenceEndMode((v as 'count' | 'until') ?? 'count')}
+                  >
+                    <SelectTrigger className="w-full">
+                      <span>
+                        {recurrenceEndMode === 'count'
+                          ? 'After a number of occurrences'
+                          : 'On or before a date'}
+                      </span>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="count">After a number of occurrences</SelectItem>
+                      <SelectItem value="until">On or before a date</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                {recurrenceEndMode === 'count' ? (
+                  <div className="space-y-1">
+                    <Label htmlFor="recCount">Total occurrences (includes first)</Label>
+                    <Input
+                      id="recCount"
+                      type="number"
+                      min={2}
+                      max={366}
+                      value={recurrenceCount}
+                      onChange={(e) =>
+                        setRecurrenceCount(
+                          Math.min(366, Math.max(2, parseInt(e.target.value, 10) || 2))
+                        )
+                      }
+                    />
+                  </div>
+                ) : (
+                  <div className="space-y-1">
+                    <Label htmlFor="recUntil">Until (local)</Label>
+                    <Input
+                      id="recUntil"
+                      type="datetime-local"
+                      value={recurrenceUntil}
+                      onChange={(e) => setRecurrenceUntil(e.target.value)}
+                    />
+                  </div>
+                )}
+              </div>
+            ) : null}
+          </div>
+
           <div className="space-y-1">
             <Label htmlFor="notes">Notes (optional)</Label>
             <Input id="notes" value={notes} onChange={(e) => setNotes(e.target.value)} />
@@ -247,7 +394,11 @@ export function CreateAppointmentDialog(props: {
 
           <DialogFooter showCloseButton>
             <Button type="submit" disabled={loading || !canCreate}>
-              {loading ? 'Creating…' : 'Create appointment'}
+              {loading
+                ? 'Creating…'
+                : repeatEnabled
+                  ? 'Create series'
+                  : 'Create appointment'}
             </Button>
           </DialogFooter>
         </form>
