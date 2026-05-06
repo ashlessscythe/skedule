@@ -7,6 +7,8 @@
     "build": "npx prisma generate && next build",
     "start": "npx prisma migrate deploy && next start",
     "lint": "eslint",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "prisma:migrate": "prisma migrate dev",
     "prisma:generate": "prisma generate",
     "prisma:seed": "prisma db seed"
@@ -45,7 +47,8 @@
     "eslint-config-next": "16.2.4",
     "tailwindcss": "^4",
     "tsx": "^4.21.0",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^3.2.4"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
