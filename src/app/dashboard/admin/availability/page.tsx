@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import { getTenantContext, requireAdmin } from '@/lib/tenant-context';
 import { CreateAvailabilityDialog } from './ui/create-availability-dialog';
+import { AvailabilityRowActions } from './ui/availability-row-actions';
 import { Badge } from '@/components/ui/badge';
 import {
   Table,
@@ -73,12 +74,13 @@ export default async function AdminAvailabilityPage() {
               <TableHead>Staff</TableHead>
               <TableHead>Rule</TableHead>
               <TableHead className="text-right">Window</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {rows.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} className="py-10 text-center text-sm">
+                <TableCell colSpan={5} className="py-10 text-center text-sm">
                   No availability configured yet.
                 </TableCell>
               </TableRow>
@@ -105,6 +107,9 @@ export default async function AdminAvailabilityPage() {
                     {r.startTimeLocal && r.endTimeLocal
                       ? `${r.startTimeLocal}–${r.endTimeLocal}`
                       : '—'}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <AvailabilityRowActions id={r.id} />
                   </TableCell>
                 </TableRow>
               ))

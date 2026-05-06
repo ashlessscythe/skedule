@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import { getTenantContext, requireAdmin } from '@/lib/tenant-context';
 import { CreateLocationDialog } from './ui/create-location-dialog';
+import { LocationRowActions } from './ui/location-row-actions';
 import {
   Table,
   TableBody,
@@ -38,12 +39,13 @@ export default async function AdminLocationsPage() {
               <TableHead>Name</TableHead>
               <TableHead>Timezone</TableHead>
               <TableHead>Address</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {locations.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={3} className="py-10 text-center text-sm">
+                <TableCell colSpan={4} className="py-10 text-center text-sm">
                   No locations yet.
                 </TableCell>
               </TableRow>
@@ -56,6 +58,9 @@ export default async function AdminLocationsPage() {
                     {[l.addressLine1, l.city, l.state, l.postalCode]
                       .filter(Boolean)
                       .join(', ') || '—'}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <LocationRowActions location={l} />
                   </TableCell>
                 </TableRow>
               ))

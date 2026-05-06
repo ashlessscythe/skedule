@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import { getTenantContext, requireAdmin } from '@/lib/tenant-context';
 import { CreateAppointmentTypeDialog } from './ui/create-appointment-type-dialog';
+import { AppointmentTypeRowActions } from './ui/appointment-type-row-actions';
 import {
   Table,
   TableBody,
@@ -38,12 +39,13 @@ export default async function AdminAppointmentTypesPage() {
               <TableHead>Name</TableHead>
               <TableHead>Description</TableHead>
               <TableHead className="text-right">Duration</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {types.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={3} className="py-10 text-center text-sm">
+                <TableCell colSpan={4} className="py-10 text-center text-sm">
                   No appointment types yet.
                 </TableCell>
               </TableRow>
@@ -55,6 +57,9 @@ export default async function AdminAppointmentTypesPage() {
                     {t.description ?? '—'}
                   </TableCell>
                   <TableCell className="text-right text-sm">{t.durationMinutes} min</TableCell>
+                  <TableCell className="text-right">
+                    <AppointmentTypeRowActions type={t} />
+                  </TableCell>
                 </TableRow>
               ))
             )}
