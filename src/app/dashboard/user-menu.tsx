@@ -36,8 +36,12 @@ export function UserMenu({ email }: { email: string }) {
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem
-            onClick={() => signOut({ callbackUrl: '/auth/login' })}
+            closeOnClick={false}
             className="cursor-pointer"
+            onClick={() => {
+              const callbackUrl = new URL('/auth/login', window.location.origin).href;
+              void signOut({ callbackUrl });
+            }}
           >
             Sign out
           </DropdownMenuItem>
