@@ -2,7 +2,7 @@ import { describe, expect, it, vi, beforeEach } from 'vitest';
 
 vi.mock('@prisma/client', () => {
   class PrismaClient {
-    constructor(_opts?: unknown) {}
+    constructor() {}
   }
   return { PrismaClient };
 });
@@ -11,7 +11,8 @@ describe('prisma singleton', () => {
   beforeEach(() => {
     vi.resetModules();
     // ensure global cache is cleared between imports
-    (globalThis as any).prisma = undefined;
+    const g = globalThis as typeof globalThis & { prisma?: unknown };
+    g.prisma = undefined;
   });
 
   it('reuses global prisma instance in non-production', async () => {

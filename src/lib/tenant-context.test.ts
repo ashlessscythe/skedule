@@ -8,14 +8,14 @@ vi.mock('next-auth', () => ({
 describe('getTenantContext', () => {
   it('throws Unauthorized when no session', async () => {
     const { getServerSession } = await import('next-auth');
-    vi.mocked(getServerSession as any).mockResolvedValue(null);
+    vi.mocked(getServerSession).mockResolvedValue(null);
 
     await expect(getTenantContext()).rejects.toThrow(/Unauthorized/);
   });
 
   it('throws Forbidden when primary tenant not in roles', async () => {
     const { getServerSession } = await import('next-auth');
-    vi.mocked(getServerSession as any).mockResolvedValue({
+    vi.mocked(getServerSession).mockResolvedValue({
       userId: 'u1',
       primaryTenantId: 't-missing',
       roles: [{ tenantId: 't1', role: 'STAFF' }],
@@ -26,7 +26,7 @@ describe('getTenantContext', () => {
 
   it('returns tenantId + role for primaryTenantId', async () => {
     const { getServerSession } = await import('next-auth');
-    vi.mocked(getServerSession as any).mockResolvedValue({
+    vi.mocked(getServerSession).mockResolvedValue({
       userId: 'u1',
       primaryTenantId: 't1',
       roles: [

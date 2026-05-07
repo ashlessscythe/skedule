@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { writeAuditLog } from './audit';
 import { prisma } from '@/lib/prisma';
+import type { AuditActionType } from '@prisma/client';
 
 vi.mock('@/lib/prisma', () => ({
   prisma: {
@@ -15,7 +16,7 @@ describe('writeAuditLog', () => {
     await writeAuditLog({
       tenantId: 't1',
       userId: 'u1',
-      action: 'APPOINTMENT_CREATED' as any,
+      action: 'APPOINTMENT_CREATED' as AuditActionType,
       entityType: 'Appointment',
       entityId: 'a1',
       appointmentId: 'a1',

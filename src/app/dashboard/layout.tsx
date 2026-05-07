@@ -74,6 +74,15 @@ export default async function DashboardLayout({ children }: { children: ReactNod
                   Locations
                 </Link>
                 <Link
+                  href="/dashboard/admin/staff"
+                  className={cn(
+                    buttonVariants({ variant: 'ghost', size: 'sm' }),
+                    'justify-start'
+                  )}
+                >
+                  Staff
+                </Link>
+                <Link
                   href="/dashboard/admin/appointment-types"
                   className={cn(
                     buttonVariants({ variant: 'ghost', size: 'sm' }),

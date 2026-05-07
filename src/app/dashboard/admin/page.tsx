@@ -19,6 +19,9 @@ export default async function AdminHomePage() {
         <Link href="/dashboard/admin/locations" className={buttonVariants({ variant: 'outline' })}>
           Locations
         </Link>
+        <Link href="/dashboard/admin/staff" className={buttonVariants({ variant: 'outline' })}>
+          Staff
+        </Link>
         <Link
           href="/dashboard/admin/appointment-types"
           className={buttonVariants({ variant: 'outline' })}

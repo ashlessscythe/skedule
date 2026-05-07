@@ -155,7 +155,10 @@ export function CreateAvailabilityDialog(props: {
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
               <Label>Rule type</Label>
-              <Select value={kind} onValueChange={(v) => setKind(v as any)}>
+              <Select
+                value={kind}
+                onValueChange={(v) => setKind(v === 'blockedDate' ? 'blockedDate' : 'weekly')}
+              >
                 <SelectTrigger className="w-full">
                   <span>{kind === 'weekly' ? 'Weekly window' : 'Blocked date'}</span>
                 </SelectTrigger>
