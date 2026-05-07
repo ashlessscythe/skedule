@@ -28,7 +28,16 @@ export type CalendarEvent = {
   endUtc: string; // ISO
   locationId: string | null;
   staffId: string | null;
+  /** Present when the API can resolve the location (e.g. availability rows). */
+  locationName?: string | null;
+  /** Human-readable staff scope: a name, or "All staff" when the row applies to everyone. */
+  staffLabel?: string | null;
 };
+
+function formatUserDisplayName(u: { firstName: string; lastName: string; email: string }) {
+  const n = `${u.firstName} ${u.lastName}`.trim();
+  return n || u.email;
+}
 
 function hhmmToParts(s: string) {
   const [h, m] = s.split(':').map((x) => parseInt(x, 10));
@@ -83,9 +92,7 @@ export async function GET(req: Request) {
       for (const a of appts) {
         const clientName = `${a.client.firstName} ${a.client.lastName}`.trim();
         const typeName = a.type?.name?.trim() || 'Appointment';
-        const staffName = a.staff
-          ? `${a.staff.firstName} ${a.staff.lastName}`.trim() || a.staff.email
-          : 'Unassigned';
+        const staffName = a.staff ? formatUserDisplayName(a.staff) : 'Unassigned';
         events.push({
           id: a.id,
           kind: 'APPOINTMENT',
@@ -94,6 +101,8 @@ export async function GET(req: Request) {
           endUtc: a.endTime.toISOString(),
           locationId: a.locationId,
           staffId: a.staffId ?? null,
+          locationName: locationMeta.get(a.locationId)?.name ?? null,
+          staffLabel: a.staff ? staffName : 'Unassigned',
         });
       }
     }
@@ -125,6 +134,20 @@ export async function GET(req: Request) {
         take: 2000,
       });
 
+      const availStaffIds = [
+        ...new Set(availRows.map((r) => r.staffId).filter((id): id is string => Boolean(id))),
+      ];
+      const availStaffUsers =
+        availStaffIds.length > 0
+          ? await prisma.user.findMany({
+              where: { id: { in: availStaffIds } },
+              select: { id: true, firstName: true, lastName: true, email: true },
+            })
+          : [];
+      const availStaffNameById = new Map(
+        availStaffUsers.map((u) => [u.id, formatUserDisplayName(u)])
+      );
+
       const startDayKey = formatInTimeZone(startUtc, tz, 'yyyy-MM-dd');
       const startLocalMidnightUtc = fromZonedTime(`${startDayKey}T00:00:00`, tz);
 
@@ -149,6 +172,10 @@ export async function GET(req: Request) {
               endUtc: fromZonedTime(`${dayKey}T23:59:59`, tz).toISOString(),
               locationId,
               staffId: r.staffId ?? null,
+              locationName: loc.name,
+              staffLabel: r.staffId
+                ? (availStaffNameById.get(r.staffId) ?? r.staffId)
+                : 'All staff',
             });
             continue;
           }
@@ -177,6 +204,10 @@ export async function GET(req: Request) {
             endUtc: clippedEnd.toISOString(),
             locationId,
             staffId: r.staffId ?? null,
+            locationName: loc.name,
+            staffLabel: r.staffId
+              ? (availStaffNameById.get(r.staffId) ?? r.staffId)
+              : 'All staff',
           });
         }
       }

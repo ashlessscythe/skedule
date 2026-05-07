@@ -18,6 +18,8 @@ type CalendarEvent = {
   endUtc: string;
   locationId: string | null;
   staffId: string | null;
+  locationName?: string | null;
+  staffLabel?: string | null;
 };
 
 export function CalendarView(props: {
@@ -271,7 +273,29 @@ export function CalendarView(props: {
                           {formatInTimeZone(new Date(e.endUtc), displayTimeZone, 'HH:mm')}
                         </div>
                       </div>
-                      <div className="mt-0.5 text-xs">{e.title}</div>
+                      {e.kind === 'AVAILABILITY' || e.kind === 'BLOCKED' ? (
+                        <div className="mt-1 space-y-1">
+                          {(e.locationName || e.staffLabel) ? (
+                            <div className="space-y-0.5 text-[0.65rem] leading-snug text-muted-foreground">
+                              {e.locationName ? (
+                                <div>
+                                  <span className="text-muted-foreground/80">Location </span>
+                                  {e.locationName}
+                                </div>
+                              ) : null}
+                              {e.staffLabel ? (
+                                <div>
+                                  <span className="text-muted-foreground/80">Staff </span>
+                                  {e.staffLabel}
+                                </div>
+                              ) : null}
+                            </div>
+                          ) : null}
+                          <div className="text-sm font-semibold leading-tight">{e.title}</div>
+                        </div>
+                      ) : (
+                        <div className="mt-0.5 text-xs">{e.title}</div>
+                      )}
                     </div>
                   ))
                 )}
