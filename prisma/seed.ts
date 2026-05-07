@@ -169,8 +169,8 @@ async function main() {
       primaryColor: '#0f766e',
       secondaryColor: '#0ea5e9',
       accentColor: '#f97316',
-      emailFromName: 'Acme Health Scheduling',
-      emailFromAddress: 'no-reply@acmehealth.test',
+      emailFromName: null,
+      emailFromAddress: null,
     },
   });
 
