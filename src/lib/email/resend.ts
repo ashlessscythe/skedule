@@ -1,7 +1,9 @@
 import { Resend } from 'resend';
 
 function isEmailEnabled() {
-  return (process.env.SEND_EMAIL ?? '').toLowerCase() === 'true';
+  const v = (process.env.SEND_EMAIL ?? '').trim().toLowerCase();
+  if (!v) return true;
+  return v !== 'false';
 }
 
 export type SendEmailArgs = {

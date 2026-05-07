@@ -1,18 +1,15 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { TurnstileWidget } from '@/components/security/turnstile-widget';
 
-export function RegisterForm(props: { turnstileSiteKey: string }) {
+export function ForgotPasswordForm(props: { turnstileSiteKey: string }) {
   const [email, setEmail] = useState('');
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [password, setPassword] = useState('');
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -20,54 +17,44 @@ export function RegisterForm(props: { turnstileSiteKey: string }) {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setLoading(true);
     setError(null);
+    setLoading(true);
     try {
-      const res = await fetch('/api/auth/register', {
+      const res = await fetch('/api/auth/password-reset/request', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
           email,
-          firstName,
-          lastName,
-          password,
           turnstileToken,
         }),
       });
 
       if (!res.ok) {
         const body = (await res.json().catch(() => null)) as { error?: string } | null;
-        setError(body?.error ?? 'Unable to register.');
+        setError(body?.error ?? 'Unable to request a reset.');
         return;
       }
+
       setSuccess(true);
     } finally {
       setLoading(false);
     }
   }
 
-  const canSubmit =
-    Boolean(email.trim()) &&
-    Boolean(firstName.trim()) &&
-    Boolean(lastName.trim()) &&
-    password.length >= 8 &&
-    Boolean(turnstileToken) &&
-    Boolean(props.turnstileSiteKey);
+  const canSubmit = Boolean(email.trim()) && Boolean(turnstileToken) && Boolean(props.turnstileSiteKey);
 
   return (
     <Card className="shadow-sm">
       <CardHeader>
-        <CardTitle>Request access</CardTitle>
-        <CardDescription>
-          Create an account. An admin will approve your access before you can sign in.
-        </CardDescription>
+        <CardTitle>Reset your password</CardTitle>
+        <CardDescription>We’ll email you a link to set a new password.</CardDescription>
       </CardHeader>
 
       <CardContent>
         {success ? (
           <div className="space-y-2 text-sm">
-            <p className="font-medium">Thanks — your registration was received.</p>
-            <p className="text-muted-foreground">We’ll email you when an admin approves your access.</p>
+            <p className="font-medium">If that email exists, we sent a reset link.</p>
+            <p className="text-muted-foreground">Check your inbox (and spam folder) for the message.</p>
             <p className="pt-2">
               <Link href="/auth/login" className="text-primary underline-offset-4 hover:underline">
                 Back to sign in
@@ -86,40 +73,6 @@ export function RegisterForm(props: { turnstileSiteKey: string }) {
                 onChange={(e) => setEmail(e.target.value)}
                 required
               />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <Label htmlFor="firstName">First name</Label>
-                <Input
-                  id="firstName"
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="lastName">Last name</Label>
-                <Input
-                  id="lastName"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="space-y-1">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                autoComplete="new-password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-              <p className="text-xs text-muted-foreground">Minimum 8 characters.</p>
             </div>
 
             {props.turnstileSiteKey ? (
@@ -141,7 +94,7 @@ export function RegisterForm(props: { turnstileSiteKey: string }) {
             ) : null}
 
             <Button type="submit" className="w-full" disabled={loading || !canSubmit}>
-              {loading ? 'Submitting…' : 'Submit request'}
+              {loading ? 'Sending…' : 'Email reset link'}
             </Button>
           </form>
         )}
@@ -150,7 +103,7 @@ export function RegisterForm(props: { turnstileSiteKey: string }) {
       {!success ? (
         <CardFooter className="justify-center">
           <span className="text-xs text-muted-foreground">
-            Already have access?{' '}
+            Remembered it?{' '}
             <Link href="/auth/login" className="text-primary underline-offset-4 hover:underline">
               Sign in
             </Link>

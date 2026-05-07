@@ -6,20 +6,31 @@ import {
   notifyTenantAdminsOfPendingRegistration,
   sendRegistrationPendingEmailToUser,
 } from '@/lib/email/registration-emails';
+import { verifyTurnstile } from '@/lib/security/turnstile';
 
 const RegisterSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
   firstName: z.string().min(1),
   lastName: z.string().min(1),
+  turnstileToken: z.string().min(1),
 });
 
 export async function POST(req: Request) {
   const json = await req.json().catch(() => null);
-  const input = RegisterSchema.parse({
+  const parsed = RegisterSchema.safeParse({
     ...json,
     email: typeof json?.email === 'string' ? json.email.toLowerCase().trim() : json?.email,
   });
+  if (!parsed.success) {
+    return NextResponse.json({ error: 'Invalid request.' }, { status: 400 });
+  }
+  const input = parsed.data;
+
+  const turnstile = await verifyTurnstile({ token: input.turnstileToken, headers: req.headers });
+  if (!turnstile.ok) {
+    return NextResponse.json({ error: 'Turnstile verification failed.' }, { status: 403 });
+  }
 
   const tenantSlug = process.env.DEFAULT_TENANT_SLUG?.trim() || null;
 

@@ -5,6 +5,10 @@ vi.mock('@/lib/email/registration-emails', () => ({
   notifyTenantAdminsOfPendingRegistration: vi.fn(async () => undefined),
 }));
 
+vi.mock('@/lib/security/turnstile', () => ({
+  verifyTurnstile: vi.fn(async () => ({ ok: true })),
+}));
+
 const prismaMock = {
   user: {
     findUnique: vi.fn(async () => null),
@@ -41,6 +45,7 @@ describe('/api/auth/register', () => {
           password: 'password123',
           firstName: 'A',
           lastName: 'B',
+          turnstileToken: 'ts-ok',
         }),
       })
     );
@@ -68,6 +73,7 @@ describe('/api/auth/register', () => {
           password: 'password123',
           firstName: 'New',
           lastName: 'User',
+          turnstileToken: 'ts-ok',
         }),
       })
     );

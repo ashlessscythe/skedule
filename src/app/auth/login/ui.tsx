@@ -85,6 +85,15 @@ export function LoginForm() {
         </Button>
 
         <p className="text-center text-xs text-muted-foreground">
+          <Link
+            href="/auth/forgot-password"
+            className="text-primary underline-offset-4 hover:underline"
+          >
+            Forgot password?
+          </Link>
+        </p>
+
+        <p className="text-center text-xs text-muted-foreground">
           Need access?{' '}
           <Link href="/auth/register" className="text-primary underline-offset-4 hover:underline">
             Request access
