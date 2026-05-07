@@ -1,4 +1,13 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+
+vi.mock('@/lib/prisma', () => ({
+  prisma: {
+    user: {
+      findUnique: vi.fn(),
+    },
+  },
+}));
+
 import { authOptions } from './auth';
 
 describe('authOptions', () => {

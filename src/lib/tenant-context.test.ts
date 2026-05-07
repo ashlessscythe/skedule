@@ -1,6 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
 import { getTenantContext, requireAdmin } from './tenant-context';
 
+vi.mock('@/lib/prisma', () => ({
+  prisma: {},
+}));
+
 vi.mock('next-auth', () => ({
   getServerSession: vi.fn(),
 }));

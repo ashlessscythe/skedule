@@ -14,6 +14,9 @@ vi.mock('@/lib/prisma', () => ({
     appointment: {
       findFirst: vi.fn(),
     },
+    branding: {
+      findUnique: vi.fn(),
+    },
   },
 }));
 
@@ -49,6 +52,7 @@ describe('sendAppointmentBookedEmail', () => {
   beforeEach(() => {
     vi.mocked(sendEmail).mockReset();
     vi.mocked(prisma.appointment.findFirst).mockReset();
+    vi.mocked(prisma.branding.findUnique).mockReset();
   });
 
   it('does not call sendEmail when appointment is missing', async () => {
@@ -67,6 +71,7 @@ describe('sendAppointmentBookedEmail', () => {
 
   it('sends confirmation with series note when seriesExtraCount provided', async () => {
     vi.mocked(prisma.appointment.findFirst).mockResolvedValue(mockAppt());
+    vi.mocked(prisma.branding.findUnique).mockResolvedValue(null);
     vi.mocked(sendEmail).mockResolvedValue({ skipped: false, id: 'e-1' });
 
     await sendAppointmentBookedEmail({ appointmentId: 'appt-1', seriesExtraCount: 2 });
@@ -78,11 +83,27 @@ describe('sendAppointmentBookedEmail', () => {
     expect(call.html).toContain('2');
     expect(call.html).toMatch(/more occurrence/i);
   });
+
+  it('uses tenant email from when configured', async () => {
+    vi.mocked(prisma.appointment.findFirst).mockResolvedValue(mockAppt());
+    vi.mocked(prisma.branding.findUnique).mockResolvedValue({
+      emailFromName: 'Clinic Team',
+      emailFromAddress: 'no-reply@clinic.test',
+    } as { emailFromName: string; emailFromAddress: string });
+    vi.mocked(sendEmail).mockResolvedValue({ skipped: false, id: 'e-1' });
+
+    await sendAppointmentBookedEmail({ appointmentId: 'appt-1' });
+
+    expect(sendEmail).toHaveBeenCalledTimes(1);
+    const call = vi.mocked(sendEmail).mock.calls[0]![0];
+    expect(call.from).toBe('Clinic Team <no-reply@clinic.test>');
+  });
 });
 
 describe('sendAppointmentUpdatedEmailForClient', () => {
   beforeEach(() => {
     vi.mocked(sendEmail).mockReset();
+    vi.mocked(prisma.branding.findUnique).mockReset();
   });
 
   it('skips when no client email', async () => {
@@ -103,6 +124,7 @@ describe('sendAppointmentUpdatedEmailForClient', () => {
 describe('sendAppointmentCancelledEmailForClient', () => {
   beforeEach(() => {
     vi.mocked(sendEmail).mockReset();
+    vi.mocked(prisma.branding.findUnique).mockReset();
   });
 
   it('sends cancellation email', async () => {
@@ -116,6 +138,7 @@ describe('sendAppointmentCancelledEmailForClient', () => {
 describe('sendAppointmentReminderEmailForClient', () => {
   beforeEach(() => {
     vi.mocked(sendEmail).mockReset();
+    vi.mocked(prisma.branding.findUnique).mockReset();
   });
 
   it('returns false when send is skipped', async () => {

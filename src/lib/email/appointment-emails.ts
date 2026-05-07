@@ -1,6 +1,7 @@
 import type { Appointment, Client, Location, Tenant } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { sendEmail } from '@/lib/email/resend';
+import { getTenantEmailFrom } from '@/lib/email/tenant-from';
 import { formatAppointmentWindowLocal } from '@/lib/email/format-appointment-local';
 import { renderAppointmentConfirmationEmail } from '@/lib/email/templates/appointment-confirmation';
 import { renderAppointmentUpdatedEmail } from '@/lib/email/templates/appointment-updated';
@@ -65,7 +66,8 @@ export async function sendAppointmentBookedEmail(options: {
       seriesExtraCount: options.seriesExtraCount,
     });
 
-    const result = await sendEmail({ to: fields.email, subject, html });
+    const from = await getTenantEmailFrom(appt.tenantId);
+    const result = await sendEmail({ to: fields.email, subject, html, ...(from ? { from } : {}) });
     if (result.skipped) console.info('[email] booked skipped:', result.reason);
   } catch (e) {
     console.error('[email] booked failed', options.appointmentId, e);
@@ -84,7 +86,8 @@ export async function sendAppointmentUpdatedEmailForClient(appt: AppointmentEmai
       locationName: fields.locationName,
     });
 
-    const result = await sendEmail({ to: fields.email, subject, html });
+    const from = await getTenantEmailFrom(appt.tenantId);
+    const result = await sendEmail({ to: fields.email, subject, html, ...(from ? { from } : {}) });
     if (result.skipped) console.info('[email] updated skipped:', result.reason);
   } catch (e) {
     console.error('[email] updated failed', appt.id, e);
@@ -103,7 +106,8 @@ export async function sendAppointmentCancelledEmailForClient(appt: AppointmentEm
       locationName: fields.locationName,
     });
 
-    const result = await sendEmail({ to: fields.email, subject, html });
+    const from = await getTenantEmailFrom(appt.tenantId);
+    const result = await sendEmail({ to: fields.email, subject, html, ...(from ? { from } : {}) });
     if (result.skipped) console.info('[email] cancelled skipped:', result.reason);
   } catch (e) {
     console.error('[email] cancelled failed', appt.id, e);
@@ -121,7 +125,8 @@ export async function sendAppointmentReminderEmailForClient(appt: AppointmentEma
     locationName: fields.locationName,
   });
 
-  const result = await sendEmail({ to: fields.email, subject, html });
+  const from = await getTenantEmailFrom(appt.tenantId);
+  const result = await sendEmail({ to: fields.email, subject, html, ...(from ? { from } : {}) });
   if (result.skipped) {
     console.info('[email] reminder skipped:', result.reason);
     return false;
