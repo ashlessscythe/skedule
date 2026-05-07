@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { signIn } from 'next-auth/react';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 
 export function LoginForm() {
@@ -82,6 +83,13 @@ export function LoginForm() {
         <Button type="submit" className="w-full" disabled={loading}>
           {loading ? 'Signing in…' : 'Sign in'}
         </Button>
+
+        <p className="text-center text-xs text-muted-foreground">
+          Need access?{' '}
+          <Link href="/auth/register" className="text-primary underline-offset-4 hover:underline">
+            Request access
+          </Link>
+        </p>
       </div>
     </form>
   );

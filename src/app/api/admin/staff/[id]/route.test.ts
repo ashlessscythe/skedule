@@ -9,10 +9,17 @@ vi.mock('@/lib/audit', () => ({
   writeAuditLog: vi.fn(async () => undefined),
 }));
 
+vi.mock('@/lib/email/registration-emails', () => ({
+  sendRegistrationApprovedEmailToUser: vi.fn(async () => undefined),
+}));
+
 const prismaMock = {
   userTenant: {
     findFirst: vi.fn(async () => null),
     update: vi.fn(async () => null),
+  },
+  tenant: {
+    findUnique: vi.fn(async () => ({ name: 'Clinic' })),
   },
 };
 
@@ -71,6 +78,9 @@ describe('/api/admin/staff/[id]', () => {
     const body = await res.json();
     expect(body.role).toBe('ADMIN');
     expect(body.status).toBe('ACTIVE');
+
+    const { sendRegistrationApprovedEmailToUser } = await import('@/lib/email/registration-emails');
+    expect(vi.mocked(sendRegistrationApprovedEmailToUser)).toHaveBeenCalledTimes(1);
   });
 });
 

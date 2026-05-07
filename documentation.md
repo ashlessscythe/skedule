@@ -34,16 +34,19 @@ Required values:
 - `SHADOW_DATABASE_URL` (recommended: a separate Neon branch/db used only for Prisma migrations)
 - `NEXTAUTH_SECRET`
 - `NEXTAUTH_URL`
+- `DEFAULT_TENANT_SLUG` (tenant slug used for public registration)
 
 Email:
 - `SEND_EMAIL` defaults to `"false"`; set to `"true"` only when you *intend* to send mail
 - `RESEND_API_KEY` required only when `SEND_EMAIL="true"`
 - `EMAIL_FROM_DEFAULT` required only when `SEND_EMAIL="true"`
+- Optional: `REGISTRATION_ADMIN_NOTIFY_EMAILS` (comma-separated fallback recipients for pending registration notifications)
 
 When `SEND_EMAIL=true` and the client has an email address, the app sends:
 - **Confirmation** after creating an appointment (one email for the series; body notes extra occurrences when applicable)
 - **Updated** when time or location changes (still `SCHEDULED`)
 - **Cancelled** when status becomes `CANCELLED` or the appointment is deleted (soft cancel)
+- **Registration received** on public signup (pending admin approval), and **approval** once activated
 
 **Reminder emails** (optional):
 - Set `CRON_SECRET` to a long random string.

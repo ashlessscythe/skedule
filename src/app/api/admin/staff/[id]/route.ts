@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { getTenantContext, requireAdmin } from '@/lib/tenant-context';
 import { writeAuditLog } from '@/lib/audit';
+import { sendRegistrationApprovedEmailToUser } from '@/lib/email/registration-emails';
 
 const UpdateMembershipSchema = z.object({
   role: z.enum(['ADMIN', 'STAFF']).optional(),
@@ -61,6 +62,27 @@ export async function PATCH(
       to: { role: updated.role, status: updated.status },
     },
   });
+
+  if (existing.status !== 'ACTIVE' && updated.status === 'ACTIVE') {
+    try {
+      const tenant = await prisma.tenant.findUnique({
+        where: { id: ctx.tenantId },
+        select: { name: true },
+      });
+      const email = updated.user.email?.trim();
+      const userName = `${updated.user.firstName} ${updated.user.lastName}`.trim();
+      if (tenant?.name && email) {
+        await sendRegistrationApprovedEmailToUser({
+          tenantId: ctx.tenantId,
+          tenantName: tenant.name,
+          userEmail: email,
+          userName,
+        });
+      }
+    } catch (e) {
+      console.error('[admin/staff] approval email failed', updated.id, e);
+    }
+  }
 
   return NextResponse.json({
     id: updated.id,
