@@ -14,6 +14,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
 
   const roleForTenant = session.roles.find((r) => r.tenantId === session.primaryTenantId)?.role;
   const isAdmin = roleForTenant === 'ADMIN';
+  const isStaffOrAdmin = roleForTenant === 'STAFF' || isAdmin;
 
   const activeTenant = await prisma.tenant.findUnique({
     where: { id: session.primaryTenantId },
@@ -90,6 +91,14 @@ export default async function DashboardLayout({ children }: { children: ReactNod
             >
               Appointments
             </Link>
+            {isStaffOrAdmin ? (
+              <Link
+                href="/dashboard/calendar"
+                className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'justify-start')}
+              >
+                Calendar
+              </Link>
+            ) : null}
             <Link
               href="/dashboard/clients"
               className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'justify-start')}

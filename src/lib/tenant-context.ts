@@ -45,3 +45,7 @@ export function requireAdmin(ctx: TenantContext) {
   if (ctx.role !== 'ADMIN') throw new Error('Forbidden');
 }
 
+export function requireStaffOrAdmin(ctx: TenantContext) {
+  if (ctx.role !== 'STAFF' && ctx.role !== 'ADMIN') throw new Error('Forbidden');
+}
+
