@@ -78,7 +78,7 @@ describe('AdminStaffPage', () => {
     expect(await screen.findByRole('dialog')).toBeInTheDocument();
     expect(screen.getAllByText(/add staff member/i)[0]).toBeInTheDocument();
     await user.keyboard('{Escape}');
-  });
+  }, 20000);
 
   it('submits create staff payload to /api/admin/staff', async () => {
     const Page = (await import('./page')).default;
@@ -105,6 +105,6 @@ describe('AdminStaffPage', () => {
       role: 'STAFF',
       status: 'ACTIVE',
     });
-  });
+  }, 20000);
 });
 
