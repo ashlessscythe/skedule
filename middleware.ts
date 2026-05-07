@@ -8,6 +8,21 @@ import {
   isAdminForTenant,
 } from './src/lib/security/rbac-mw';
 
+const CSP = [
+  "default-src 'self'",
+  "base-uri 'self'",
+  "object-src 'none'",
+  "frame-ancestors 'self'",
+  "form-action 'self'",
+  "img-src 'self' data: blob:",
+  "font-src 'self' data:",
+  "style-src 'self' 'unsafe-inline'",
+  // Cloudflare Turnstile uses an iframe with `srcdoc` containing inline script.
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com",
+  "connect-src 'self' https://challenges.cloudflare.com",
+  "frame-src https://challenges.cloudflare.com",
+].join('; ');
+
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
@@ -35,10 +50,15 @@ export async function middleware(req: NextRequest) {
     }
   }
 
-  return NextResponse.next();
+  const res = NextResponse.next();
+  // Ensure Turnstile can run in dev/prod even if another layer injects a strict CSP.
+  res.headers.set('Content-Security-Policy', CSP);
+  res.headers.set('X-Content-Type-Options', 'nosniff');
+  res.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  return res;
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*'],
+  matcher: ['/:path*'],
 };
 

@@ -56,7 +56,9 @@ export function TurnstileWidget(props: {
       if (id && window.turnstile?.remove) window.turnstile.remove(id);
       widgetIdRef.current = null;
     };
-  }, [scriptReady, props]);
+    // Intentionally depend on specific values rather than the entire `props`
+    // object to avoid re-render/remove/re-render loops.
+  }, [scriptReady, props.siteKey, props.theme, props.size, props.onToken]);
 
   return (
     <div className={props.className}>
