@@ -4,8 +4,6 @@ Multi-tenant appointment management platform (Next.js App Router + Prisma + Neon
 
 - **Docs**: see [`documentation.md`](documentation.md)
 
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
-
 ## Delivery Phases (feature roadmap)
 
 - **Phase 0 (completed)**: Dashboard shell + navigation + admin section scaffold
@@ -19,42 +17,98 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
   - Locations CRUD UI (`/api/locations`)
   - Appointment types CRUD UI (`/api/appointment-types`)
   - Availability CRUD UI (`/api/availability`)
-- **Phase 3**: Signup + PENDING approval workflow + Turnstile + emails
-- **Phase 4**: Appointment/intake communication templates + triggers (Resend)
-- **Phase 5**: QR/PDF operational UI + audit/check-in enhancements
-- **Phase 6**: Reporting filters/utilization + audit log viewer
+- **Phase 3 (completed)**: Signup + pending approval workflow + Turnstile + emails
+- **Phase 4 (completed)**: Appointment communication templates + triggers (Resend)
+- **Phase 5 (completed)**: QR/PDF operational UI + audit/check-in enhancements
+- **Phase 6 (completed)**: Reporting + audit log viewer + tenant switcher
 
 ## Getting Started
 
-First, run the development server:
+### 1) Install deps
+
+```bash
+npm install
+```
+
+### 2) Environment variables
+
+Copy `.env.example` to `.env` and fill in real values.
+
+```bash
+cp .env.example .env
+```
+
+Required values:
+- `DATABASE_URL`
+- `NEXTAUTH_SECRET`
+- `NEXTAUTH_URL`
+- `DEFAULT_TENANT_SLUG` (tenant slug used for public registration)
+
+Recommended (Prisma migrations in dev):
+- `SHADOW_DATABASE_URL`
+
+Email (Resend):
+- `.env.example` ships with `SEND_EMAIL="false"`. Email sends are skipped unless you change it.
+- If you enable sending, you must set `RESEND_API_KEY` and `EMAIL_FROM_DEFAULT`.
+- Optional: `REGISTRATION_ADMIN_NOTIFY_EMAILS` (comma-separated fallback recipients for pending registration notifications)
+- Optional (cron reminder emails): `CRON_SECRET`, `REMINDER_HOURS_BEFORE` (default `24`)
+
+Turnstile (public auth forms):
+- `TURNSTILE_SITE_KEY`
+- `TURNSTILE_SECRET_KEY`
+
+### 3) Database
+
+Run migrations and seed sample data:
+
+```bash
+npm run prisma:migrate
+npm run prisma:seed
+```
+
+Seed creates:
+- Tenant: `Acme Health Clinic`
+- Users:
+  - `admin@acmehealth.test` / `Admin123!` (ADMIN)
+  - `staff@acmehealth.test` / `Admin123!` (STAFF)
+
+### 4) Run locally
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open:
+- `http://localhost:3000/auth/login`
+- `http://localhost:3000/dashboard`
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Tests
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm test
+npm run test:coverage
+```
 
-## Learn More
+## Lint
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm run lint
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Reminder email cron (optional)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+The app exposes `GET/POST /api/cron/appointment-reminders`.
 
-## Deploy on Vercel
+- Set `CRON_SECRET`.
+- Call the endpoint with either:
+  - `Authorization: Bearer <CRON_SECRET>`, or
+  - `x-cron-secret: <CRON_SECRET>`
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Deployment notes
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+This repo’s `start` script runs Prisma migrations before starting Next.js:
+
+```bash
+npm run build
+npm start
+```
