@@ -49,7 +49,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
 
       <div className="sticky top-0 z-40 border-b border-border/60 bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/65 lg:static lg:z-auto lg:border-b-0 lg:bg-transparent lg:backdrop-blur-none">
         <header className="border-b border-border/60 bg-background/60 backdrop-blur supports-[backdrop-filter]:bg-background/40 lg:border-b-0 lg:bg-transparent lg:backdrop-blur-none">
-          <div className="mx-auto flex w-full max-w-6xl items-center gap-3 px-3 py-3 sm:px-6 sm:py-4">
+          <div className="mx-auto flex w-full max-w-6xl items-center gap-3 px-3 py-3 sm:px-6 sm:py-4 xl:max-w-7xl 2xl:max-w-screen-2xl">
             {tenantLogoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -73,7 +73,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
               />
             </div>
           </div>
-          <div className="mx-auto flex w-full max-w-6xl items-center px-3 pb-3 sm:px-6 sm:pb-4">
+          <div className="mx-auto flex w-full max-w-6xl items-center px-3 pb-3 sm:px-6 sm:pb-4 xl:max-w-7xl 2xl:max-w-screen-2xl">
             <div className="ml-auto">
               <TenantSwitcher />
             </div>
@@ -83,7 +83,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
         <DashboardMobileNav mainItems={mainItems} admin={admin} />
       </div>
 
-      <div className="mx-auto grid w-full max-w-6xl gap-6 px-3 py-6 sm:px-6 sm:py-8 lg:grid-cols-[240px_1fr]">
+      <div className="mx-auto grid w-full max-w-6xl gap-6 px-3 py-6 sm:px-6 sm:py-8 lg:grid-cols-[240px_1fr] xl:max-w-7xl 2xl:max-w-screen-2xl">
         <aside className="hidden rounded-xl border border-border/60 bg-card/70 p-3 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-card/50 lg:block">
           <div className="px-3 py-2 text-sm font-semibold tracking-tight">Dashboard</div>
           <nav className="mt-1 flex flex-col gap-1">

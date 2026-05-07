@@ -226,14 +226,15 @@ export function CalendarView(props: {
         </div>
       ) : null}
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7">
+      <div className="overflow-x-auto pb-1 [-webkit-overflow-scrolling:touch]">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4 lg:min-w-[980px] lg:grid-cols-7">
         {days.map((d) => {
           const dayKey = format(d, 'yyyy-MM-dd');
           const dayEvents = eventsByDay.get(dayKey) ?? [];
           return (
             <div
               key={dayKey}
-              className="min-h-[220px] overflow-hidden rounded-xl border border-border/60 bg-card/70 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-card/50"
+              className="min-h-[220px] min-w-0 rounded-xl border border-border/60 bg-card/70 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-card/50"
             >
               <div className="border-b border-border/60 bg-background/40 px-3 py-2">
                 <div className="text-sm font-semibold tracking-tight" suppressHydrationWarning>
@@ -260,15 +261,15 @@ export function CalendarView(props: {
                             : 'border-emerald-500/30 bg-emerald-500/5'
                       )}
                     >
-                      <div className="flex items-baseline justify-between gap-2">
-                        <div className="text-[0.7rem] font-medium uppercase tracking-wide text-muted-foreground">
+                      <div className="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0.5">
+                        <div className="min-w-0 text-[0.7rem] font-medium uppercase tracking-wide text-muted-foreground">
                           {e.kind === 'APPOINTMENT'
                             ? 'Appointment'
                             : e.kind === 'BLOCKED'
                               ? 'Blocked'
                               : 'Availability'}
                         </div>
-                        <div className="font-mono text-[0.7rem] text-muted-foreground">
+                        <div className="shrink-0 font-mono text-[0.7rem] text-muted-foreground">
                           {formatInTimeZone(new Date(e.startUtc), displayTimeZone, 'HH:mm')}–
                           {formatInTimeZone(new Date(e.endUtc), displayTimeZone, 'HH:mm')}
                         </div>
@@ -294,7 +295,7 @@ export function CalendarView(props: {
                           <div className="text-sm font-semibold leading-tight">{e.title}</div>
                         </div>
                       ) : (
-                        <div className="mt-0.5 text-xs">{e.title}</div>
+                        <div className="mt-0.5 break-words text-xs">{e.title}</div>
                       )}
                     </div>
                   ))
@@ -303,6 +304,7 @@ export function CalendarView(props: {
             </div>
           );
         })}
+        </div>
       </div>
     </div>
   );
