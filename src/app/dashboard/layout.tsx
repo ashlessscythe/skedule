@@ -7,6 +7,8 @@ import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { buttonVariants } from '@/components/ui/button';
 import { TenantSwitcher } from '@/app/dashboard/ui/tenant-switcher';
+import { DashboardMobileNav } from '@/app/dashboard/ui/dashboard-mobile-nav';
+import { buildDashboardNav } from '@/app/dashboard/nav-config';
 
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
   const session = await getServerSession(authOptions);
@@ -26,6 +28,8 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   const tenantLogoUrl = activeTenant?.branding?.logoUrl?.trim() || null;
   const tenantPrimary = activeTenant?.branding?.primaryColor?.trim() || null;
 
+  const { mainItems, admin } = buildDashboardNav({ isStaffOrAdmin, isAdmin });
+
   return (
     <div
       className="relative min-h-full bg-background"
@@ -43,143 +47,73 @@ export default async function DashboardLayout({ children }: { children: ReactNod
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,theme(colors.foreground/0.05),transparent_55%)]" />
       </div>
 
-      <header className="border-b border-border/60 bg-background/60 backdrop-blur supports-[backdrop-filter]:bg-background/40">
-        <div className="mx-auto flex w-full max-w-6xl items-center gap-3 px-6 py-4">
-          {tenantLogoUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={tenantLogoUrl}
-              alt={activeTenant?.name ? `${activeTenant.name} logo` : 'Tenant logo'}
-              className="h-7 w-7 rounded object-contain"
-            />
-          ) : (
-            <div className="h-7 w-7 rounded bg-muted" />
-          )}
-          <div className="min-w-0">
-            <div className="truncate text-sm font-semibold tracking-tight">
-              {activeTenant?.name ?? 'Dashboard'}
+      <div className="sticky top-0 z-40 border-b border-border/60 bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/65 lg:static lg:z-auto lg:border-b-0 lg:bg-transparent lg:backdrop-blur-none">
+        <header className="border-b border-border/60 bg-background/60 backdrop-blur supports-[backdrop-filter]:bg-background/40 lg:border-b-0 lg:bg-transparent lg:backdrop-blur-none">
+          <div className="mx-auto flex w-full max-w-6xl items-center gap-3 px-3 py-3 sm:px-6 sm:py-4">
+            {tenantLogoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={tenantLogoUrl}
+                alt={activeTenant?.name ? `${activeTenant.name} logo` : 'Tenant logo'}
+                className="h-7 w-7 shrink-0 rounded object-contain"
+              />
+            ) : (
+              <div className="h-7 w-7 shrink-0 rounded bg-muted" />
+            )}
+            <div className="min-w-0">
+              <div className="truncate text-sm font-semibold tracking-tight">
+                {activeTenant?.name ?? 'Dashboard'}
+              </div>
+              <div className="text-xs text-muted-foreground">Active tenant</div>
             </div>
-            <div className="text-xs text-muted-foreground">Active tenant</div>
-          </div>
 
-          <div className="ml-auto h-2 w-28 overflow-hidden rounded-full bg-muted">
-            <div
-              className={cn('h-full w-full', tenantPrimary ? 'bg-[var(--tenant-primary)]' : 'bg-primary')}
-            />
+            <div className="ml-auto hidden h-2 w-28 overflow-hidden rounded-full bg-muted sm:block">
+              <div
+                className={cn('h-full w-full', tenantPrimary ? 'bg-[var(--tenant-primary)]' : 'bg-primary')}
+              />
+            </div>
           </div>
-        </div>
-        <div className="mx-auto flex w-full max-w-6xl items-center px-6 pb-4">
-          <div className="ml-auto">
-            <TenantSwitcher />
+          <div className="mx-auto flex w-full max-w-6xl items-center px-3 pb-3 sm:px-6 sm:pb-4">
+            <div className="ml-auto">
+              <TenantSwitcher />
+            </div>
           </div>
-        </div>
-      </header>
+        </header>
 
-      <div className="mx-auto grid w-full max-w-6xl gap-6 px-6 py-8 lg:grid-cols-[240px_1fr]">
-        <aside className="rounded-xl border border-border/60 bg-card/70 p-3 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-card/50">
+        <DashboardMobileNav mainItems={mainItems} admin={admin} />
+      </div>
+
+      <div className="mx-auto grid w-full max-w-6xl gap-6 px-3 py-6 sm:px-6 sm:py-8 lg:grid-cols-[240px_1fr]">
+        <aside className="hidden rounded-xl border border-border/60 bg-card/70 p-3 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-card/50 lg:block">
           <div className="px-3 py-2 text-sm font-semibold tracking-tight">Dashboard</div>
           <nav className="mt-1 flex flex-col gap-1">
-            <Link
-              href="/dashboard"
-              className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'justify-start')}
-            >
-              Overview
-            </Link>
-            <Link
-              href="/dashboard/appointments"
-              className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'justify-start')}
-            >
-              Appointments
-            </Link>
-            {isStaffOrAdmin ? (
+            {mainItems.map((item) => (
               <Link
-                href="/dashboard/calendar"
+                key={item.href}
+                href={item.href}
                 className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'justify-start')}
               >
-                Calendar
+                {item.label}
               </Link>
-            ) : null}
-            <Link
-              href="/dashboard/clients"
-              className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'justify-start')}
-            >
-              Clients
-            </Link>
-            <Link
-              href="/dashboard/reporting"
-              className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'justify-start')}
-            >
-              Reporting
-            </Link>
+            ))}
 
-            {isAdmin ? (
+            {admin ? (
               <>
                 <div className="mt-2 px-3 py-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  Admin
+                  {admin.label}
                 </div>
-                <Link
-                  href="/dashboard/admin"
-                  className={cn(
-                    buttonVariants({ variant: 'ghost', size: 'sm' }),
-                    'justify-start'
-                  )}
-                >
-                  Admin home
-                </Link>
-                <Link
-                  href="/dashboard/admin/locations"
-                  className={cn(
-                    buttonVariants({ variant: 'ghost', size: 'sm' }),
-                    'justify-start'
-                  )}
-                >
-                  Locations
-                </Link>
-                <Link
-                  href="/dashboard/admin/audit"
-                  className={cn(
-                    buttonVariants({ variant: 'ghost', size: 'sm' }),
-                    'justify-start'
-                  )}
-                >
-                  Audit log
-                </Link>
-                <Link
-                  href="/dashboard/admin/staff"
-                  className={cn(
-                    buttonVariants({ variant: 'ghost', size: 'sm' }),
-                    'justify-start'
-                  )}
-                >
-                  Staff
-                </Link>
-                <Link
-                  href="/dashboard/admin/appointment-types"
-                  className={cn(
-                    buttonVariants({ variant: 'ghost', size: 'sm' }),
-                    'justify-start'
-                  )}
-                >
-                  Appointment types
-                </Link>
-                <Link
-                  href="/dashboard/admin/availability"
-                  className={cn(
-                    buttonVariants({ variant: 'ghost', size: 'sm' }),
-                    'justify-start'
-                  )}
-                >
-                  Availability
-                </Link>
-                <Link
-                  href="/dashboard/admin/branding"
-                  className={cn(
-                    buttonVariants({ variant: 'ghost', size: 'sm' }),
-                    'justify-start'
-                  )}
-                >
-                  Branding
-                </Link>
+                {admin.items.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={cn(
+                      buttonVariants({ variant: 'ghost', size: 'sm' }),
+                      'justify-start'
+                    )}
+                  >
+                    {item.label}
+                  </Link>
+                ))}
               </>
             ) : null}
           </nav>
@@ -190,4 +124,3 @@ export default async function DashboardLayout({ children }: { children: ReactNod
     </div>
   );
 }
-

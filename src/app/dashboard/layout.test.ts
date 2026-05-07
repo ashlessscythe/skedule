@@ -8,6 +8,7 @@ const redirectMock = vi.fn((to: string) => {
 
 vi.mock('next/navigation', () => ({
   redirect: (to: string) => redirectMock(to),
+  usePathname: () => '/dashboard/admin',
 }));
 
 const getServerSessionMock = vi.fn();

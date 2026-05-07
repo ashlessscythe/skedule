@@ -18,7 +18,7 @@ export default async function DashboardPage() {
   const primaryTenant = tenantById.get(session.primaryTenantId);
 
   return (
-    <div className="mx-auto w-full max-w-5xl px-6 py-10">
+    <div className="space-y-6">
       <div className="space-y-2">
         <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
         <p className="text-sm text-muted-foreground">
@@ -26,7 +26,7 @@ export default async function DashboardPage() {
         </p>
       </div>
 
-      <div className="mt-8 grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
         <div className="rounded-lg border bg-card p-4">
           <div className="text-sm text-muted-foreground">Primary tenant</div>
           <div className="mt-1 text-sm font-medium">

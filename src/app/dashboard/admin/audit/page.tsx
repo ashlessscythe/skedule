@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import { getTenantContext, requireAdmin } from '@/lib/tenant-context';
 import { listAuditLogsForTenant } from '@/lib/audit-query';
+import { ResponsiveDataList } from '@/components/responsive-data-list';
 
 function parseDateInputToUtcStart(dateStr: string | undefined) {
   if (!dateStr) return undefined;
@@ -68,14 +69,14 @@ export default async function AdminAuditPage({
     .sort((a, b) => a.localeCompare(b));
 
   return (
-    <div className="mx-auto w-full max-w-5xl space-y-6">
+    <div className="space-y-6">
       <div className="space-y-1">
         <h1 className="text-2xl font-semibold tracking-tight">Admin Audit Log</h1>
         <p className="text-sm text-muted-foreground">Recent audit events for the active tenant.</p>
       </div>
 
       <form className="rounded-lg border bg-card p-4">
-        <div className="grid gap-3 md:grid-cols-4">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <label className="space-y-1 text-sm">
             <div className="text-muted-foreground">Start date</div>
             <input
@@ -132,13 +133,13 @@ export default async function AdminAuditPage({
           </label>
         </div>
 
-        <div className="mt-3 flex items-center justify-between gap-3">
+        <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="text-xs text-muted-foreground">
             Dates are interpreted as UTC day boundaries. Showing up to 100 entries.
           </div>
           <button
             type="submit"
-            className="inline-flex h-9 items-center justify-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground"
+            className="inline-flex h-9 shrink-0 items-center justify-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground"
           >
             Apply filters
           </button>
@@ -147,17 +148,48 @@ export default async function AdminAuditPage({
 
       <div className="rounded-lg border bg-card">
         <div className="border-b px-4 py-3 text-sm font-medium">Recent events</div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="border-b">
-              <tr>
-                <th className="h-10 px-3 text-left font-medium">When (UTC)</th>
-                <th className="h-10 px-3 text-left font-medium">Action</th>
-                <th className="h-10 px-3 text-left font-medium">Entity</th>
-                <th className="h-10 px-3 text-left font-medium">User</th>
-              </tr>
-            </thead>
-            <tbody>
+        <ResponsiveDataList
+          desktop={
+            <table className="w-full text-sm">
+              <thead className="border-b">
+                <tr>
+                  <th className="h-10 px-3 text-left font-medium">When (UTC)</th>
+                  <th className="h-10 px-3 text-left font-medium">Action</th>
+                  <th className="h-10 px-3 text-left font-medium">Entity</th>
+                  <th className="h-10 px-3 text-left font-medium">User</th>
+                </tr>
+              </thead>
+              <tbody>
+                {logs.length ? (
+                  logs.map((l) => {
+                    const when = l.createdAt.toISOString().replace('T', ' ').replace('Z', 'Z');
+                    const userLabel = l.user
+                      ? `${l.user.firstName} ${l.user.lastName}`.trim() || l.user.email
+                      : 'System';
+                    return (
+                      <tr key={l.id} className="border-b last:border-0">
+                        <td className="px-3 py-2 font-mono text-xs">{when}</td>
+                        <td className="px-3 py-2">{l.action}</td>
+                        <td className="px-3 py-2">
+                          <div className="font-medium">{l.entityType}</div>
+                          <div className="font-mono text-xs text-muted-foreground">{l.entityId}</div>
+                        </td>
+                        <td className="px-3 py-2">{userLabel}</td>
+                      </tr>
+                    );
+                  })
+                ) : (
+                  <tr>
+                    <td className="px-3 py-8 text-center text-muted-foreground" colSpan={4}>
+                      No audit entries match these filters.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          }
+          mobile={
+            <ul className="divide-y">
               {logs.length ? (
                 logs.map((l) => {
                   const when = l.createdAt.toISOString().replace('T', ' ').replace('Z', 'Z');
@@ -165,27 +197,37 @@ export default async function AdminAuditPage({
                     ? `${l.user.firstName} ${l.user.lastName}`.trim() || l.user.email
                     : 'System';
                   return (
-                    <tr key={l.id} className="border-b last:border-0">
-                      <td className="px-3 py-2 font-mono text-xs">{when}</td>
-                      <td className="px-3 py-2">{l.action}</td>
-                      <td className="px-3 py-2">
-                        <div className="font-medium">{l.entityType}</div>
-                        <div className="font-mono text-xs text-muted-foreground">{l.entityId}</div>
-                      </td>
-                      <td className="px-3 py-2">{userLabel}</td>
-                    </tr>
+                    <li key={l.id} className="space-y-2 p-4">
+                      <div>
+                        <div className="text-xs font-medium text-muted-foreground">When (UTC)</div>
+                        <div className="break-all font-mono text-xs">{when}</div>
+                      </div>
+                      <div>
+                        <div className="text-xs font-medium text-muted-foreground">Action</div>
+                        <div className="text-sm">{l.action}</div>
+                      </div>
+                      <div>
+                        <div className="text-xs font-medium text-muted-foreground">Entity</div>
+                        <div className="text-sm font-medium">{l.entityType}</div>
+                        <div className="break-all font-mono text-xs text-muted-foreground">
+                          {l.entityId}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-xs font-medium text-muted-foreground">User</div>
+                        <div className="text-sm">{userLabel}</div>
+                      </div>
+                    </li>
                   );
                 })
               ) : (
-                <tr>
-                  <td className="px-3 py-8 text-center text-muted-foreground" colSpan={4}>
-                    No audit entries match these filters.
-                  </td>
-                </tr>
+                <li className="px-4 py-8 text-center text-sm text-muted-foreground">
+                  No audit entries match these filters.
+                </li>
               )}
-            </tbody>
-          </table>
-        </div>
+            </ul>
+          }
+        />
       </div>
     </div>
   );

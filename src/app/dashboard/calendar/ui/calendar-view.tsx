@@ -120,7 +120,7 @@ export function CalendarView(props: {
               value={locationId}
               onValueChange={(v) => setLocationId(v === 'ALL' ? 'ALL' : v ?? '')}
             >
-              <SelectTrigger className="h-8 w-[240px]" disabled={isPending}>
+              <SelectTrigger className="h-8 w-full min-w-0 sm:w-[240px]" disabled={isPending}>
                 <SelectValue>{locationLabel}</SelectValue>
               </SelectTrigger>
               <SelectContent>
@@ -137,7 +137,7 @@ export function CalendarView(props: {
           <div className="grid gap-1">
             <div className="text-xs font-medium text-muted-foreground">Staff</div>
             <Select value={staffId} onValueChange={(v) => setStaffId(v === 'ALL' ? 'ALL' : v ?? '')}>
-              <SelectTrigger className="h-8 w-[240px]" disabled={isPending}>
+              <SelectTrigger className="h-8 w-full min-w-0 sm:w-[240px]" disabled={isPending}>
                 <SelectValue>{nameLabel}</SelectValue>
               </SelectTrigger>
               <SelectContent>
@@ -176,7 +176,7 @@ export function CalendarView(props: {
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Button
             type="button"
             variant="outline"
@@ -224,7 +224,7 @@ export function CalendarView(props: {
         </div>
       ) : null}
 
-      <div className="grid gap-3 md:grid-cols-7">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7">
         {days.map((d) => {
           const dayKey = format(d, 'yyyy-MM-dd');
           const dayEvents = eventsByDay.get(dayKey) ?? [];

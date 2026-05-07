@@ -6,6 +6,7 @@ import {
   countWeekdayOccurrencesInUtcDateRangeInclusive,
   minutesBetweenLocalTimes,
 } from '@/lib/reporting-metrics';
+import { ResponsiveDataList } from '@/components/responsive-data-list';
 
 export default async function ReportingPage() {
   const ctx = await getTenantContext();
@@ -161,7 +162,7 @@ export default async function ReportingPage() {
     .sort((a, b) => b.utilization - a.utilization);
 
   return (
-    <div className="mx-auto w-full max-w-5xl px-6 py-10">
+    <div className="space-y-6">
       <div className="space-y-1">
         <h1 className="text-2xl font-semibold tracking-tight">Reporting</h1>
         <p className="text-sm text-muted-foreground">
@@ -169,7 +170,7 @@ export default async function ReportingPage() {
         </p>
       </div>
 
-      <div className="mt-6 grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="rounded-lg border bg-card p-4">
           <div className="text-sm text-muted-foreground">Total appointments</div>
           <div className="mt-1 text-2xl font-semibold">{total}</div>
@@ -212,7 +213,7 @@ export default async function ReportingPage() {
         </ul>
       </div>
 
-      <div className="mt-6 grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
         <div className="rounded-lg border bg-card p-4">
           <div className="text-sm text-muted-foreground">Booked minutes</div>
           <div className="mt-1 text-2xl font-semibold">{bookedMinutesTotal}</div>
@@ -221,79 +222,153 @@ export default async function ReportingPage() {
           <div className="text-sm text-muted-foreground">Available minutes</div>
           <div className="mt-1 text-2xl font-semibold">{availabilityMinutesTotal}</div>
         </div>
-        <div className="rounded-lg border bg-card p-4">
+        <div className="rounded-lg border bg-card p-4 sm:col-span-2 md:col-span-1">
           <div className="text-sm text-muted-foreground">Utilization</div>
           <div className="mt-1 text-2xl font-semibold">{(utilization * 100).toFixed(1)}%</div>
         </div>
       </div>
 
-      <div className="mt-8 grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-6 lg:grid-cols-2">
         <div className="rounded-lg border bg-card p-4">
           <div className="text-lg font-semibold tracking-tight">By staff</div>
-          <div className="mt-3 overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="border-b">
-                <tr>
-                  <th className="h-10 px-2 text-left font-medium">Staff</th>
-                  <th className="h-10 px-2 text-right font-medium">Booked</th>
-                  <th className="h-10 px-2 text-right font-medium">Available</th>
-                  <th className="h-10 px-2 text-right font-medium">Utilization</th>
-                </tr>
-              </thead>
-              <tbody>
+          <ResponsiveDataList
+            desktop={
+              <div className="mt-3">
+                <table className="w-full text-sm">
+                  <thead className="border-b">
+                    <tr>
+                      <th className="h-10 px-2 text-left font-medium">Staff</th>
+                      <th className="h-10 px-2 text-right font-medium">Booked</th>
+                      <th className="h-10 px-2 text-right font-medium">Available</th>
+                      <th className="h-10 px-2 text-right font-medium">Utilization</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {staffRows.length ? (
+                      staffRows.map((r) => (
+                        <tr key={r.id} className="border-b last:border-0">
+                          <td className="p-2">{r.name}</td>
+                          <td className="p-2 text-right">{r.bookedMinutes}</td>
+                          <td className="p-2 text-right">{r.availableMinutes}</td>
+                          <td className="p-2 text-right">{(r.utilization * 100).toFixed(1)}%</td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td className="p-2 text-muted-foreground" colSpan={4}>
+                          No staff utilization data for this window.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            }
+            mobile={
+              <ul className="mt-3 divide-y">
                 {staffRows.length ? (
                   staffRows.map((r) => (
-                    <tr key={r.id} className="border-b last:border-0">
-                      <td className="p-2">{r.name}</td>
-                      <td className="p-2 text-right">{r.bookedMinutes}</td>
-                      <td className="p-2 text-right">{r.availableMinutes}</td>
-                      <td className="p-2 text-right">{(r.utilization * 100).toFixed(1)}%</td>
-                    </tr>
+                    <li key={r.id} className="space-y-2 py-3 first:pt-0 last:pb-0">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0 text-sm font-medium leading-snug">{r.name}</div>
+                        <div className="shrink-0 text-right">
+                          <div className="text-xs text-muted-foreground">Utilization</div>
+                          <div className="text-sm font-semibold tabular-nums">
+                            {(r.utilization * 100).toFixed(1)}%
+                          </div>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3 text-sm">
+                        <div>
+                          <div className="text-xs text-muted-foreground">Booked (min)</div>
+                          <div className="tabular-nums">{r.bookedMinutes}</div>
+                        </div>
+                        <div>
+                          <div className="text-xs text-muted-foreground">Available (min)</div>
+                          <div className="tabular-nums">{r.availableMinutes}</div>
+                        </div>
+                      </div>
+                    </li>
                   ))
                 ) : (
-                  <tr>
-                    <td className="p-2 text-muted-foreground" colSpan={4}>
-                      No staff utilization data for this window.
-                    </td>
-                  </tr>
+                  <li className="py-6 text-sm text-muted-foreground">
+                    No staff utilization data for this window.
+                  </li>
                 )}
-              </tbody>
-            </table>
-          </div>
+              </ul>
+            }
+          />
         </div>
 
         <div className="rounded-lg border bg-card p-4">
           <div className="text-lg font-semibold tracking-tight">By location</div>
-          <div className="mt-3 overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="border-b">
-                <tr>
-                  <th className="h-10 px-2 text-left font-medium">Location</th>
-                  <th className="h-10 px-2 text-right font-medium">Booked</th>
-                  <th className="h-10 px-2 text-right font-medium">Available</th>
-                  <th className="h-10 px-2 text-right font-medium">Utilization</th>
-                </tr>
-              </thead>
-              <tbody>
+          <ResponsiveDataList
+            desktop={
+              <div className="mt-3">
+                <table className="w-full text-sm">
+                  <thead className="border-b">
+                    <tr>
+                      <th className="h-10 px-2 text-left font-medium">Location</th>
+                      <th className="h-10 px-2 text-right font-medium">Booked</th>
+                      <th className="h-10 px-2 text-right font-medium">Available</th>
+                      <th className="h-10 px-2 text-right font-medium">Utilization</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {locationRows.length ? (
+                      locationRows.map((r) => (
+                        <tr key={r.id} className="border-b last:border-0">
+                          <td className="p-2">{r.name}</td>
+                          <td className="p-2 text-right">{r.bookedMinutes}</td>
+                          <td className="p-2 text-right">{r.availableMinutes}</td>
+                          <td className="p-2 text-right">{(r.utilization * 100).toFixed(1)}%</td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td className="p-2 text-muted-foreground" colSpan={4}>
+                          No location utilization data for this window.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            }
+            mobile={
+              <ul className="mt-3 divide-y">
                 {locationRows.length ? (
                   locationRows.map((r) => (
-                    <tr key={r.id} className="border-b last:border-0">
-                      <td className="p-2">{r.name}</td>
-                      <td className="p-2 text-right">{r.bookedMinutes}</td>
-                      <td className="p-2 text-right">{r.availableMinutes}</td>
-                      <td className="p-2 text-right">{(r.utilization * 100).toFixed(1)}%</td>
-                    </tr>
+                    <li key={r.id} className="space-y-2 py-3 first:pt-0 last:pb-0">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0 text-sm font-medium leading-snug">{r.name}</div>
+                        <div className="shrink-0 text-right">
+                          <div className="text-xs text-muted-foreground">Utilization</div>
+                          <div className="text-sm font-semibold tabular-nums">
+                            {(r.utilization * 100).toFixed(1)}%
+                          </div>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3 text-sm">
+                        <div>
+                          <div className="text-xs text-muted-foreground">Booked (min)</div>
+                          <div className="tabular-nums">{r.bookedMinutes}</div>
+                        </div>
+                        <div>
+                          <div className="text-xs text-muted-foreground">Available (min)</div>
+                          <div className="tabular-nums">{r.availableMinutes}</div>
+                        </div>
+                      </div>
+                    </li>
                   ))
                 ) : (
-                  <tr>
-                    <td className="p-2 text-muted-foreground" colSpan={4}>
-                      No location utilization data for this window.
-                    </td>
-                  </tr>
+                  <li className="py-6 text-sm text-muted-foreground">
+                    No location utilization data for this window.
+                  </li>
                 )}
-              </tbody>
-            </table>
-          </div>
+              </ul>
+            }
+          />
         </div>
       </div>
     </div>

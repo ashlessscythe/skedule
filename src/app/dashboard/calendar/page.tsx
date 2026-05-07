@@ -33,7 +33,7 @@ export default async function CalendarPage() {
     .sort((a, b) => a.label.localeCompare(b.label));
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-6 py-10">
+    <div className="space-y-6">
       <div className="space-y-1">
         <h1 className="text-2xl font-semibold tracking-tight">Calendar</h1>
         <p className="text-sm text-muted-foreground">
@@ -41,7 +41,7 @@ export default async function CalendarPage() {
         </p>
       </div>
 
-      <div className="mt-6">
+      <div>
         <CalendarView
           locations={locations}
           staff={staff}
