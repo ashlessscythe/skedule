@@ -71,7 +71,7 @@ describe('AdminStaffPage', () => {
     render(el as unknown as React.ReactElement);
 
     expect(await screen.findByRole('heading', { name: 'Staff' })).toBeInTheDocument();
-    expect(screen.getByText('a@example.com')).toBeInTheDocument();
+    expect(screen.getAllByText('a@example.com')).toHaveLength(2);
 
     const user = userEvent.setup();
     await user.click(screen.getByRole('button', { name: /add member/i }));
