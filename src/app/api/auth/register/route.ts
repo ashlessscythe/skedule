@@ -21,13 +21,7 @@ export async function POST(req: Request) {
     email: typeof json?.email === 'string' ? json.email.toLowerCase().trim() : json?.email,
   });
 
-  const tenantSlug = process.env.DEFAULT_TENANT_SLUG?.trim();
-  if (!tenantSlug) {
-    return NextResponse.json(
-      { error: 'Missing DEFAULT_TENANT_SLUG configuration.' },
-      { status: 500 }
-    );
-  }
+  const tenantSlug = process.env.DEFAULT_TENANT_SLUG?.trim() || null;
 
   const existing = await prisma.user.findUnique({
     where: { email: input.email },
@@ -37,12 +31,25 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Email is already registered.' }, { status: 409 });
   }
 
-  const tenant = await prisma.tenant.findUnique({
-    where: { slug: tenantSlug },
-    select: { id: true, name: true },
-  });
+  const tenant = tenantSlug
+    ? await prisma.tenant.findUnique({
+        where: { slug: tenantSlug },
+        select: { id: true, name: true },
+      })
+    : await prisma.tenant.findFirst({
+        where: { deletedAt: null },
+        orderBy: { createdAt: 'asc' },
+        select: { id: true, name: true },
+      });
   if (!tenant) {
-    return NextResponse.json({ error: 'Configured tenant not found.' }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: tenantSlug
+          ? 'Configured tenant not found.'
+          : 'No tenant exists to attach a registration to. Seed or create a tenant, or set DEFAULT_TENANT_SLUG.',
+      },
+      { status: 500 }
+    );
   }
 
   const passwordHash = await bcrypt.hash(input.password, 10);
