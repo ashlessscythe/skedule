@@ -16,6 +16,7 @@ export function IntakeForm({
   const [lastName, setLastName] = useState(initial.lastName);
   const [email, setEmail] = useState(initial.email);
   const [phone, setPhone] = useState(initial.phone);
+  const [metadataText, setMetadataText] = useState('');
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -25,10 +26,14 @@ export function IntakeForm({
     setLoading(true);
     setError(null);
     try {
+      let metadata: unknown = undefined;
+      if (metadataText.trim().length) {
+        metadata = JSON.parse(metadataText);
+      }
       const res = await fetch(`/api/intake/${token}/submit`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ firstName, lastName, email, phone }),
+        body: JSON.stringify({ firstName, lastName, email, phone, metadata }),
       });
       if (!res.ok) {
         const body = (await res.json().catch(() => null)) as { error?: string } | null;
@@ -88,6 +93,17 @@ export function IntakeForm({
       <div className="space-y-1">
         <Label htmlFor="phone">Phone</Label>
         <Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
+      </div>
+
+      <div className="space-y-1">
+        <Label htmlFor="metadata">Additional info (JSON)</Label>
+        <textarea
+          id="metadata"
+          className="min-h-[88px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          placeholder='Optional. Example: {"preferredLanguage":"en","marketingOptIn":true}'
+          value={metadataText}
+          onChange={(e) => setMetadataText(e.target.value)}
+        />
       </div>
 
       {error ? (

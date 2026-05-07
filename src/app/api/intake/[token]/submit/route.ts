@@ -1,12 +1,19 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
+import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
+
+const IntakeMetadataSchema = z
+  .record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.null()]))
+  .refine((obj) => Object.keys(obj).length <= 50, { message: 'Too many metadata keys' })
+  .refine((obj) => JSON.stringify(obj).length <= 5_000, { message: 'Metadata too large' });
 
 const IntakeSubmitSchema = z.object({
   firstName: z.string().min(1),
   lastName: z.string().min(1),
   email: z.string().email().optional().or(z.literal('')),
   phone: z.string().optional().or(z.literal('')),
+  metadata: IntakeMetadataSchema.optional(),
 });
 
 export async function POST(
@@ -33,6 +40,19 @@ export async function POST(
   if (!clientId) return NextResponse.json({ error: 'Invalid token' }, { status: 400 });
 
   await prisma.$transaction(async (tx) => {
+    const existing = await tx.client.findUnique({
+      where: { id: clientId },
+      select: { metadata: true },
+    });
+
+    const existingMeta =
+      existing?.metadata && typeof existing.metadata === 'object' && !Array.isArray(existing.metadata)
+        ? (existing.metadata as Prisma.JsonObject)
+        : {};
+    const nextMeta: Prisma.JsonObject = input.metadata
+      ? { ...existingMeta, ...input.metadata }
+      : existingMeta;
+
     await tx.client.update({
       where: { id: clientId },
       data: {
@@ -40,6 +60,7 @@ export async function POST(
         lastName: input.lastName,
         email: input.email || null,
         phone: input.phone || null,
+        metadata: nextMeta as Prisma.InputJsonValue,
       },
     });
 

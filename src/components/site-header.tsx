@@ -6,23 +6,7 @@ import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 import { ThemeSwitcher } from "@/components/theme/theme-switcher";
 import { UserMenu } from "@/app/dashboard/user-menu";
-
-function SparkIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      aria-hidden="true"
-      {...props}
-    >
-      <path
-        d="M12 2l1.4 6.1L20 12l-6.6 3.9L12 22l-1.4-6.1L4 12l6.6-3.9L12 2z"
-        className="fill-primary"
-      />
-    </svg>
-  );
-}
+import { LogoMark } from "@/components/brand/logo-mark";
 
 export async function SiteHeader() {
   const session = await getServerSession(authOptions);
@@ -35,7 +19,7 @@ export async function SiteHeader() {
         <div className="flex items-center gap-3">
           <Link href="/" className="flex items-center gap-2">
             <span className="flex size-9 items-center justify-center rounded-xl bg-muted/60 ring-1 ring-foreground/10">
-              <SparkIcon className="size-5" />
+              <LogoMark className="size-5" />
             </span>
             <span className="text-sm font-semibold tracking-tight">Skedule</span>
           </Link>

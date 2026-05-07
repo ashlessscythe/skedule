@@ -6,6 +6,7 @@ import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { buttonVariants } from '@/components/ui/button';
+import { TenantSwitcher } from '@/app/dashboard/ui/tenant-switcher';
 
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
   const session = await getServerSession(authOptions);
@@ -64,6 +65,11 @@ export default async function DashboardLayout({ children }: { children: ReactNod
             <div
               className={cn('h-full w-full', tenantPrimary ? 'bg-[var(--tenant-primary)]' : 'bg-primary')}
             />
+          </div>
+        </div>
+        <div className="mx-auto flex w-full max-w-6xl items-center px-6 pb-4">
+          <div className="ml-auto">
+            <TenantSwitcher />
           </div>
         </div>
       </header>

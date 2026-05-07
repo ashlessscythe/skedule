@@ -1,7 +1,12 @@
 import { getToken } from 'next-auth/jwt';
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
-import { isAdminForPrimaryTenant } from './src/lib/security/rbac-mw';
+import {
+  ACTIVE_TENANT_COOKIE,
+  getActiveTenantIdFromCookie,
+  isAdminForPrimaryTenant,
+  isAdminForTenant,
+} from './src/lib/security/rbac-mw';
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
@@ -16,7 +21,13 @@ export async function middleware(req: NextRequest) {
     }
 
     if (pathname.startsWith('/dashboard/admin')) {
-      if (!isAdminForPrimaryTenant(token)) {
+      const activeTenantId = getActiveTenantIdFromCookie(
+        req.cookies.get(ACTIVE_TENANT_COOKIE)?.value
+      );
+      const ok =
+        (activeTenantId ? isAdminForTenant(token, activeTenantId) : false) ||
+        isAdminForPrimaryTenant(token);
+      if (!ok) {
         const url = req.nextUrl.clone();
         url.pathname = '/dashboard';
         return NextResponse.redirect(url);

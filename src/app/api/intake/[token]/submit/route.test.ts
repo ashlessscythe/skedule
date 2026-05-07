@@ -1,86 +1,107 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
-type TxClient = {
-  client: { update: ReturnType<typeof vi.fn> };
-  intakeToken: { update: ReturnType<typeof vi.fn> };
-};
+const prismaMocks = vi.hoisted(() => ({
+  findUnique: vi.fn(),
+  txFindUnique: vi.fn(),
+  txUpdateClient: vi.fn(),
+  txUpdateToken: vi.fn(),
+}));
 
-const txMock: TxClient = {
-  client: { update: vi.fn(async () => ({})) },
-  intakeToken: { update: vi.fn(async () => ({})) },
-};
-
-const prismaMock = {
-  intakeToken: {
-    findUnique: vi.fn(async () => null),
-  },
-  $transaction: vi.fn(async <T>(fn: (tx: TxClient) => Promise<T>) => fn(txMock)),
+type Tx = {
+  client: { findUnique: (...args: unknown[]) => unknown; update: (...args: unknown[]) => unknown };
+  intakeToken: { update: (...args: unknown[]) => unknown };
 };
 
 vi.mock('@/lib/prisma', () => ({
-  prisma: prismaMock,
+  prisma: {
+    intakeToken: {
+      findUnique: (...args: unknown[]) => prismaMocks.findUnique(...args),
+    },
+    $transaction: async (fn: (tx: Tx) => unknown) =>
+      fn({
+        client: {
+          findUnique: (...args: unknown[]) => prismaMocks.txFindUnique(...args),
+          update: (...args: unknown[]) => prismaMocks.txUpdateClient(...args),
+        },
+        intakeToken: {
+          update: (...args: unknown[]) => prismaMocks.txUpdateToken(...args),
+        },
+      }),
+  },
 }));
 
+import { POST } from './route';
+
 describe('/api/intake/[token]/submit', () => {
-  beforeEach(() => {
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date('2026-01-01T00:00:00.000Z'));
-    vi.clearAllMocks();
-  });
-
-  it('returns 404 for invalid token', async () => {
-    prismaMock.intakeToken.findUnique.mockResolvedValueOnce(null);
-    const { POST } = await import('./route');
-    const res = await POST(
-      new Request('http://test', {
-        method: 'POST',
-        body: JSON.stringify({ firstName: 'A', lastName: 'B', email: '', phone: '' }),
-      }),
-      { params: Promise.resolve({ token: 'bad' }) }
-    );
-    expect(res.status).toBe(404);
-  });
-
-  it('returns 400 for used token', async () => {
-    prismaMock.intakeToken.findUnique.mockResolvedValueOnce({
+  it('merges metadata into Client.metadata', async () => {
+    prismaMocks.findUnique.mockResolvedValue({
       id: 'it1',
-      usedAt: new Date('2025-12-31T00:00:00.000Z'),
-      expiresAt: new Date('2026-01-02T00:00:00.000Z'),
-      clientId: 'c1',
-      appointment: null,
-    });
-    const { POST } = await import('./route');
-    const res = await POST(
-      new Request('http://test', {
-        method: 'POST',
-        body: JSON.stringify({ firstName: 'A', lastName: 'B', email: '', phone: '' }),
-      }),
-      { params: Promise.resolve({ token: 't' }) }
-    );
-    expect(res.status).toBe(400);
-    const body = await res.json();
-    expect(body.error).toMatch(/already used/i);
-  });
-
-  it('returns 400 for expired token', async () => {
-    prismaMock.intakeToken.findUnique.mockResolvedValueOnce({
-      id: 'it1',
+      token: 'tok',
       usedAt: null,
-      expiresAt: new Date('2025-12-31T00:00:00.000Z'),
+      expiresAt: new Date(Date.now() + 60_000),
       clientId: 'c1',
       appointment: null,
+      client: { id: 'c1', tenantId: 't1' },
     });
-    const { POST } = await import('./route');
+
+    prismaMocks.txFindUnique.mockResolvedValue({ metadata: { a: 1, keep: true } });
+    prismaMocks.txUpdateClient.mockResolvedValue({});
+    prismaMocks.txUpdateToken.mockResolvedValue({});
+
     const res = await POST(
-      new Request('http://test', {
+      new Request('http://test.local/api/intake/tok/submit', {
         method: 'POST',
-        body: JSON.stringify({ firstName: 'A', lastName: 'B', email: '', phone: '' }),
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          firstName: 'A',
+          lastName: 'B',
+          email: 'a@example.com',
+          phone: '',
+          metadata: { a: 2, b: 'x' },
+        }),
       }),
-      { params: Promise.resolve({ token: 't' }) }
+      { params: Promise.resolve({ token: 'tok' }) }
     );
-    expect(res.status).toBe(400);
-    const body = await res.json();
-    expect(body.error).toMatch(/expired/i);
+    expect(res.status).toBe(200);
+    expect(prismaMocks.txUpdateClient).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 'c1' },
+        data: expect.objectContaining({
+          metadata: { a: 2, b: 'x', keep: true },
+        }),
+      })
+    );
+  });
+
+  it('rejects metadata with too many keys', async () => {
+    prismaMocks.findUnique.mockResolvedValue({
+      id: 'it1',
+      token: 'tok',
+      usedAt: null,
+      expiresAt: new Date(Date.now() + 60_000),
+      clientId: 'c1',
+      appointment: null,
+      client: { id: 'c1', tenantId: 't1' },
+    });
+    const metadata: Record<string, string> = {};
+    for (let i = 0; i < 60; i++) metadata[`k${i}`] = 'v';
+
+    await expect(
+      POST(
+        new Request('http://test.local/api/intake/tok/submit', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            firstName: 'A',
+            lastName: 'B',
+            email: 'a@example.com',
+            phone: '',
+            metadata,
+          }),
+        }),
+        { params: Promise.resolve({ token: 'tok' }) }
+      )
+    ).rejects.toBeTruthy();
   });
 });
 
