@@ -53,6 +53,12 @@ When `SEND_EMAIL=true` and the client has an email address, the app sends:
 
 ---
 
+## Tests & coverage
+
+Run unit tests with `npm test`. To generate a coverage report (text + lcov, written to `./coverage/`), run `npm run test:coverage`.
+
+---
+
 ## Database
 
 ### Migrate
