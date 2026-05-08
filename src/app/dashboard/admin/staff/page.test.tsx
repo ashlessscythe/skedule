@@ -5,6 +5,14 @@ import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
+vi.mock('next/navigation', () => {
+  return {
+    useRouter: () => ({ replace: vi.fn(), push: vi.fn(), prefetch: vi.fn() }),
+    usePathname: () => '/dashboard/admin/staff',
+    useSearchParams: () => new URLSearchParams(''),
+  };
+});
+
 const getTenantContextMock = vi.fn();
 const requireAdminMock = vi.fn();
 vi.mock('@/lib/tenant-context', () => ({

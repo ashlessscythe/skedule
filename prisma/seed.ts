@@ -45,7 +45,6 @@ function parseArgs(argv: string[]): SeedOptions {
       i++;
     } else if (a === '--clear') opts.clear = true;
     else if (a === '--help' || a === '-h') {
-      // eslint-disable-next-line no-console
       console.log(
         [
           'Usage: prisma db seed -- [options]',
@@ -671,7 +670,8 @@ async function main() {
 
   // Additional sample data (beyond the baseline records above)
   if (opts.count > 0) {
-    let faker: any | undefined;
+    type Faker = (typeof import('@faker-js/faker'))['faker'];
+    let faker: Faker | undefined;
 
     if (opts.useFaker) {
       // Lazy import so seed still works without faker unless requested.
