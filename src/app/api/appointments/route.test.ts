@@ -4,7 +4,7 @@ vi.mock('@/lib/tenant-context', () => ({
   getTenantContext: vi.fn(async () => ({
     userId: 'u1',
     tenantId: 't1',
-    role: 'ADMIN',
+    role: 'STAFF',
   })),
 }));
 
@@ -67,6 +67,18 @@ vi.mock('@/lib/email/appointment-emails', () => ({
 describe('/api/appointments', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  it('GET scopes list to tenantId', async () => {
+    prismaMock.appointment.findMany.mockResolvedValueOnce([]);
+    const { GET } = await import('./route');
+    const res = await GET();
+    expect(res.status).toBe(200);
+    expect(prismaMock.appointment.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ tenantId: 't1' }),
+      })
+    );
   });
 
   it('POST rejects missing durationMinutes/endTime', async () => {

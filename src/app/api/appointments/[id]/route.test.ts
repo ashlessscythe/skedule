@@ -4,7 +4,7 @@ vi.mock('@/lib/tenant-context', () => ({
   getTenantContext: vi.fn(async () => ({
     userId: 'u1',
     tenantId: 't1',
-    role: 'ADMIN',
+    role: 'STAFF',
   })),
 }));
 
@@ -44,6 +44,35 @@ vi.mock('@/lib/prisma', () => ({
 describe('/api/appointments/[id]', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  it('PATCH returns 404 when appointment not found for tenant', async () => {
+    prismaMock.appointment.findFirst.mockResolvedValueOnce(null);
+    const { PATCH } = await import('./route');
+    const res = await PATCH(
+      new Request('http://test', { method: 'PATCH', body: JSON.stringify({ notes: 'x' }) }),
+      { params: Promise.resolve({ id: 'a-cross-tenant' }) }
+    );
+    expect(res.status).toBe(404);
+    expect(prismaMock.appointment.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ id: 'a-cross-tenant', tenantId: 't1' }),
+      })
+    );
+  });
+
+  it('DELETE returns 404 when appointment not found for tenant', async () => {
+    prismaMock.appointment.findFirst.mockResolvedValueOnce(null);
+    const { DELETE } = await import('./route');
+    const res = await DELETE(new Request('http://test', { method: 'DELETE' }), {
+      params: Promise.resolve({ id: 'a-cross-tenant' }),
+    });
+    expect(res.status).toBe(404);
+    expect(prismaMock.appointment.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ id: 'a-cross-tenant', tenantId: 't1' }),
+      })
+    );
   });
 
   it('PATCH reschedule resets reminderSentAt', async () => {
