@@ -84,7 +84,7 @@ export default async function AppointmentsPage() {
         <div className="space-y-1">
           <h1 className="text-2xl font-semibold tracking-tight">Appointments</h1>
           <p className="text-sm text-muted-foreground">
-            This calendar week (UTC boundaries). Times are shown in each location's timezone.
+            This calendar week (UTC boundaries). Times are shown in each location&apos;s timezone.
             Filter, sort, and paginate below — defaults to upcoming only.
           </p>
         </div>

@@ -1,5 +1,7 @@
+import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
 import { getTenantContext, requireAdmin } from '@/lib/tenant-context';
+import { Button } from '@/components/ui/button';
 import { CreateAvailabilityDialog } from './ui/create-availability-dialog';
 import { AvailabilityRowActions } from './ui/availability-row-actions';
 import { Badge } from '@/components/ui/badge';
@@ -55,16 +57,21 @@ export default async function AdminAvailabilityPage() {
             Configure weekly windows and blocked dates for scheduling validation.
           </p>
         </div>
-        <CreateAvailabilityDialog
-          locations={locations}
-          staff={staffUsers
-            .map((s) => s.user)
-            .filter(Boolean)
-            .map((u) => ({
-              id: u!.id,
-              label: `${u!.firstName} ${u!.lastName}`.trim() || u!.email,
-            }))}
-        />
+        <div className="flex flex-wrap gap-2">
+          <Button type="button" variant="outline">
+            <Link href="/dashboard/admin/availability/graphical">Switch to graphical view</Link>
+          </Button>
+          <CreateAvailabilityDialog
+            locations={locations}
+            staff={staffUsers
+              .map((s) => s.user)
+              .filter(Boolean)
+              .map((u) => ({
+                id: u!.id,
+                label: `${u!.firstName} ${u!.lastName}`.trim() || u!.email,
+              }))}
+          />
+        </div>
       </div>
 
       <ResponsiveDataList
