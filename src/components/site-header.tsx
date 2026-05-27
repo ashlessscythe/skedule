@@ -14,14 +14,16 @@ export async function SiteHeader() {
   const ctaLabel = session ? "Dashboard" : "Get started";
 
   return (
-    <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-40 border-b border-primary/10 bg-background/75 backdrop-blur supports-[backdrop-filter]:bg-background/55">
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4">
         <div className="flex items-center gap-3">
           <Link href="/" className="flex items-center gap-2">
-            <span className="flex size-9 items-center justify-center rounded-xl bg-muted/60 ring-1 ring-foreground/10">
+            <span className="flex size-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary/20 via-accent/30 to-primary/10 ring-1 ring-primary/25">
               <LogoMark className="size-5" />
             </span>
-            <span className="text-sm font-semibold tracking-tight">Skedule</span>
+            <span className="theme-gradient-text text-sm font-semibold tracking-tight">
+              Skedule
+            </span>
           </Link>
 
           <nav className="hidden items-center gap-2 text-sm text-muted-foreground sm:flex">

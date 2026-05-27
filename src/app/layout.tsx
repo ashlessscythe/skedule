@@ -2,7 +2,11 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { getServerSession } from "next-auth";
 import "./globals.css";
-import { ThemeProvider } from "@/components/theme/theme-provider";
+import {
+  DEFAULT_APP_THEME,
+  ThemeProvider,
+  themeInitScript,
+} from "@/components/theme/theme-provider";
 import { SessionProviderWrapper } from "@/components/session-provider";
 import { SiteHeader } from "@/components/site-header";
 import { authOptions } from "@/lib/auth";
@@ -32,8 +36,12 @@ export default async function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} theme-${DEFAULT_APP_THEME} h-full antialiased`}
+      suppressHydrationWarning
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
       <body className="min-h-full flex flex-col">
         <SessionProviderWrapper session={session}>
           <ThemeProvider>

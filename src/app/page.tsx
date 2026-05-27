@@ -40,24 +40,21 @@ export default async function Home() {
   const ctaLabel = session ? 'Dashboard' : 'Get started';
 
   return (
-    <div className="relative isolate overflow-hidden bg-background text-foreground">
-      <div className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute -top-48 left-1/2 h-[520px] w-[920px] -translate-x-1/2 rounded-full bg-gradient-to-tr from-primary/25 via-purple-500/15 to-cyan-500/15 blur-3xl" />
-        <div className="absolute -bottom-40 right-[-120px] h-[420px] w-[520px] rounded-full bg-gradient-to-tr from-emerald-500/15 via-primary/15 to-fuchsia-500/15 blur-3xl" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,theme(colors.foreground/0.06),transparent_55%)]" />
-      </div>
+    <div className="relative isolate overflow-hidden text-foreground">
+      <div className="theme-ambient animate-theme-glow" aria-hidden />
+      <div className="theme-ambient-mesh" aria-hidden />
 
       <main className="mx-auto w-full max-w-6xl px-6 pb-16 pt-10 sm:pt-14">
         <section className="grid items-center gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:gap-12">
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <div className="inline-flex items-center gap-2 rounded-full bg-muted/60 px-3 py-1 text-xs text-muted-foreground ring-1 ring-foreground/10">
-              <span className="size-1.5 rounded-full bg-primary" />
+            <div className="inline-flex items-center gap-2 rounded-full bg-muted/60 px-3 py-1 text-xs text-muted-foreground ring-1 ring-primary/20 backdrop-blur-sm">
+              <span className="size-1.5 rounded-full bg-primary shadow-[0_0_12px_color-mix(in_oklch,var(--primary)_70%,transparent)]" />
               Multi-tenant scheduling made clean
             </div>
 
             <h1 className="mt-5 text-pretty text-4xl font-semibold tracking-tight sm:text-5xl">
               Run appointments like a{' '}
-              <span className="animate-gradient-text bg-gradient-to-r from-primary via-fuchsia-500 to-cyan-500 bg-[length:200%_200%] bg-clip-text text-transparent">
+              <span className="theme-gradient-text animate-gradient-text">
                 modern product
               </span>
               .
@@ -70,7 +67,13 @@ export default async function Home() {
             </p>
 
             <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
-              <Link href={ctaHref} className={buttonVariants({ size: 'lg' })}>
+              <Link
+                href={ctaHref}
+                className={cn(
+                  buttonVariants({ size: 'lg' }),
+                  'border-0 bg-primary-gradient shadow-lg shadow-primary/25'
+                )}
+              >
                 {ctaLabel}
               </Link>
               <Link
@@ -98,8 +101,15 @@ export default async function Home() {
           </div>
 
           <div className="relative animate-in fade-in slide-in-from-bottom-6 duration-900">
-            <div className="absolute -inset-6 -z-10 rounded-3xl bg-gradient-to-tr from-primary/15 via-transparent to-cyan-500/15 blur-2xl" />
-            <Card className="border-border/60 bg-card/70 backdrop-blur supports-[backdrop-filter]:bg-card/50">
+            <div
+              className="absolute -inset-6 -z-10 rounded-3xl blur-2xl"
+              style={{
+                background:
+                  'linear-gradient(135deg, color-mix(in oklch, var(--theme-glow-1) 60%, transparent), transparent, color-mix(in oklch, var(--theme-glow-2) 50%, transparent))',
+              }}
+              aria-hidden
+            />
+            <Card className="theme-card-glow border-border/50 bg-card/75 backdrop-blur ring-1 ring-primary/15 supports-[backdrop-filter]:bg-card/55">
               <CardHeader>
                 <CardTitle>What you get</CardTitle>
                 <CardDescription>
@@ -157,7 +167,7 @@ export default async function Home() {
               <Card
                 key={f.title}
                 className={cn(
-                  'border-border/60 bg-card/70 backdrop-blur supports-[backdrop-filter]:bg-card/50',
+                  'border-border/50 bg-card/75 backdrop-blur ring-1 ring-primary/10 supports-[backdrop-filter]:bg-card/55',
                   'animate-in fade-in slide-in-from-bottom-3 duration-700',
                   idx === 0 && 'delay-0',
                   idx === 1 && 'delay-75',
@@ -173,14 +183,20 @@ export default async function Home() {
             ))}
           </div>
 
-          <div className="mt-10 flex flex-col items-start justify-between gap-4 rounded-2xl bg-muted/40 p-6 ring-1 ring-foreground/10 sm:flex-row sm:items-center">
+          <div className="mt-10 flex flex-col items-start justify-between gap-4 rounded-2xl bg-gradient-to-br from-muted/60 via-card/40 to-accent/20 p-6 ring-1 ring-primary/15 backdrop-blur sm:flex-row sm:items-center">
             <div>
               <div className="text-sm font-medium">Ready to try it?</div>
               <div className="mt-1 text-sm text-muted-foreground">
                 Jump in and start scheduling—no detours.
               </div>
             </div>
-            <Link href={ctaHref} className={buttonVariants({ size: 'lg' })}>
+            <Link
+              href={ctaHref}
+              className={cn(
+                buttonVariants({ size: 'lg' }),
+                'border-0 bg-primary-gradient shadow-md shadow-primary/20'
+              )}
+            >
               {ctaLabel}
             </Link>
           </div>

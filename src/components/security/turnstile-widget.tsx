@@ -23,7 +23,13 @@ declare global {
   }
 }
 
-export function TurnstileWidget(props: {
+export function TurnstileWidget({
+  siteKey,
+  onToken,
+  className,
+  theme = 'auto',
+  size = 'normal',
+}: {
   siteKey: string;
   onToken: (token: string | null) => void;
   className?: string;
@@ -32,8 +38,13 @@ export function TurnstileWidget(props: {
 }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const widgetIdRef = useRef<string | null>(null);
+  const onTokenRef = useRef(onToken);
   const [scriptReady, setScriptReady] = useState(false);
   const scriptId = useId();
+
+  useEffect(() => {
+    onTokenRef.current = onToken;
+  }, [onToken]);
 
   useEffect(() => {
     if (!scriptReady) return;
@@ -42,12 +53,12 @@ export function TurnstileWidget(props: {
     if (widgetIdRef.current) return;
 
     const widgetId = window.turnstile.render(containerRef.current, {
-      sitekey: props.siteKey,
-      theme: props.theme ?? 'auto',
-      size: props.size ?? 'normal',
-      callback: (token) => props.onToken(token),
-      'expired-callback': () => props.onToken(null),
-      'error-callback': () => props.onToken(null),
+      sitekey: siteKey,
+      theme,
+      size,
+      callback: (token) => onTokenRef.current(token),
+      'expired-callback': () => onTokenRef.current(null),
+      'error-callback': () => onTokenRef.current(null),
     });
     widgetIdRef.current = widgetId;
 
@@ -56,12 +67,10 @@ export function TurnstileWidget(props: {
       if (id && window.turnstile?.remove) window.turnstile.remove(id);
       widgetIdRef.current = null;
     };
-    // Intentionally depend on specific values rather than the entire `props`
-    // object to avoid re-render/remove/re-render loops.
-  }, [scriptReady, props.siteKey, props.theme, props.size, props.onToken]);
+  }, [scriptReady, siteKey, theme, size]);
 
   return (
-    <div className={props.className}>
+    <div className={className}>
       <Script
         id={`turnstile-${scriptId}`}
         src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"

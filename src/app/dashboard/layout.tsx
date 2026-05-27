@@ -41,11 +41,8 @@ export default async function DashboardLayout({ children }: { children: ReactNod
           : undefined
       }
     >
-      <div className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute -top-48 left-1/2 h-[520px] w-[920px] -translate-x-1/2 rounded-full bg-gradient-to-tr from-primary/20 via-purple-500/10 to-cyan-500/10 blur-3xl" />
-        <div className="absolute -bottom-40 right-[-120px] h-[420px] w-[520px] rounded-full bg-gradient-to-tr from-emerald-500/10 via-primary/10 to-fuchsia-500/10 blur-3xl" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,theme(colors.foreground/0.05),transparent_55%)]" />
-      </div>
+      <div className="theme-ambient" aria-hidden />
+      <div className="theme-ambient-mesh" aria-hidden />
 
       <div className="sticky top-0 z-40 border-b border-border/60 bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/65 lg:static lg:z-auto lg:border-b-0 lg:bg-transparent lg:backdrop-blur-none">
         <header className="border-b border-border/60 bg-background/60 backdrop-blur supports-[backdrop-filter]:bg-background/40 lg:border-b-0 lg:bg-transparent lg:backdrop-blur-none">
@@ -84,7 +81,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
       </div>
 
       <div className="mx-auto grid w-full max-w-6xl gap-6 px-3 py-6 sm:px-6 sm:py-8 lg:grid-cols-[240px_1fr] xl:max-w-7xl 2xl:max-w-screen-2xl">
-        <aside className="hidden rounded-xl border border-border/60 bg-card/70 p-3 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-card/50 lg:block">
+        <aside className="theme-card-glow hidden rounded-xl border border-border/50 bg-card/75 p-3 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-card/55 lg:block">
           <div className="px-3 py-2 text-sm font-semibold tracking-tight">Dashboard</div>
           <nav className="mt-1 flex flex-col gap-1">
             {mainItems.map((item) => (

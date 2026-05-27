@@ -4,8 +4,11 @@ import * as React from "react";
 
 export type AppTheme = "day" | "night" | "corporate" | "neon" | "cyberpunk";
 
+export const DEFAULT_APP_THEME: AppTheme = "corporate";
+
 const STORAGE_KEY = "skedule:theme";
 const THEME_CLASS_PREFIX = "theme-";
+const THEME_CHANGE_EVENT = "skedule:theme-change";
 
 const DARK_THEMES = new Set<AppTheme>(["night", "neon", "cyberpunk"]);
 
@@ -41,28 +44,43 @@ function safeParseTheme(v: string | null): AppTheme | null {
   return null;
 }
 
+function readStoredTheme(fallback: AppTheme): AppTheme {
+  return safeParseTheme(localStorage.getItem(STORAGE_KEY)) ?? fallback;
+}
+
+function subscribeToTheme(onStoreChange: () => void) {
+  window.addEventListener(THEME_CHANGE_EVENT, onStoreChange);
+  window.addEventListener("storage", onStoreChange);
+  return () => {
+    window.removeEventListener(THEME_CHANGE_EVENT, onStoreChange);
+    window.removeEventListener("storage", onStoreChange);
+  };
+}
+
+/** Runs before React hydrates to avoid theme flash (see root layout). */
+export const themeInitScript = `(function(){try{var k=${JSON.stringify(STORAGE_KEY)};var d=${JSON.stringify(DEFAULT_APP_THEME)};var t=localStorage.getItem(k);var themes=${JSON.stringify(["day", "night", "corporate", "neon", "cyberpunk"])};var dark=${JSON.stringify(["night", "neon", "cyberpunk"])};if(!t||themes.indexOf(t)===-1)t=d;var r=document.documentElement;themes.forEach(function(x){r.classList.remove("theme-"+x)});r.classList.remove("dark");r.classList.add("theme-"+t);if(dark.indexOf(t)!==-1)r.classList.add("dark")}catch(e){}})();`;
+
 export function ThemeProvider({
   children,
-  defaultTheme = "day",
+  defaultTheme = DEFAULT_APP_THEME,
 }: {
   children: React.ReactNode;
   defaultTheme?: AppTheme;
 }) {
-  const [theme, setThemeState] = React.useState<AppTheme>(() => {
-    const stored =
-      typeof window === "undefined"
-        ? null
-        : safeParseTheme(localStorage.getItem(STORAGE_KEY));
-    return stored ?? defaultTheme;
-  });
+  const theme = React.useSyncExternalStore(
+    subscribeToTheme,
+    () => readStoredTheme(defaultTheme),
+    () => defaultTheme
+  );
 
   React.useEffect(() => {
     applyThemeToDocument(theme);
-    localStorage.setItem(STORAGE_KEY, theme);
   }, [theme]);
 
   const setTheme = React.useCallback((nextTheme: AppTheme) => {
-    setThemeState(nextTheme);
+    localStorage.setItem(STORAGE_KEY, nextTheme);
+    applyThemeToDocument(nextTheme);
+    window.dispatchEvent(new Event(THEME_CHANGE_EVENT));
   }, []);
 
   const value = React.useMemo(() => ({ theme, setTheme }), [theme, setTheme]);
@@ -75,4 +93,3 @@ export function useTheme() {
   if (!ctx) throw new Error("useTheme must be used within ThemeProvider");
   return ctx;
 }
-
