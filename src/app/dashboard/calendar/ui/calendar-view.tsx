@@ -6,6 +6,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { cn } from '@/lib/utils';
 import { addDays, format, startOfWeek } from 'date-fns';
 import { formatInTimeZone } from 'date-fns-tz';
+import {
+  formatDashboardTimeRangeWithZoneHint,
+  formatTimeZoneDisplayHint,
+} from '@/lib/scheduling/time';
+import { useViewerTimeZone } from '@/lib/scheduling/use-viewer-time-zone';
 
 type LocationOption = { id: string; name: string; timeZone: string };
 type StaffOption = { id: string; label: string };
@@ -19,6 +24,7 @@ type CalendarEvent = {
   locationId: string | null;
   staffId: string | null;
   locationName?: string | null;
+  locationTimeZone?: string | null;
   staffLabel?: string | null;
 };
 
@@ -36,6 +42,7 @@ export function CalendarView(props: {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [warnings, setWarnings] = useState<string[]>([]);
   const [isPending, startTransition] = useTransition();
+  const viewerTimeZone = useViewerTimeZone();
 
   const locationLabel = useMemo(() => {
     if (locationId === 'ALL') return 'All locations';
@@ -210,7 +217,10 @@ export function CalendarView(props: {
       </div>
 
       <div className="text-xs text-muted-foreground">
-        Display timezone: <span className="font-mono">{displayTimeZone}</span>
+        Times shown in{' '}
+        <span className="font-mono">
+          {formatTimeZoneDisplayHint(displayTimeZone, viewerTimeZone, weekAnchor)}
+        </span>
         {props.viewerRole === 'ADMIN' ? (
           <span className="ml-2">• Admin</span>
         ) : (
@@ -270,8 +280,12 @@ export function CalendarView(props: {
                               : 'Availability'}
                         </div>
                         <div className="shrink-0 font-mono text-[0.7rem] text-muted-foreground">
-                          {formatInTimeZone(new Date(e.startUtc), displayTimeZone, 'HH:mm')}–
-                          {formatInTimeZone(new Date(e.endUtc), displayTimeZone, 'HH:mm')}
+                          {formatDashboardTimeRangeWithZoneHint(
+                            e.startUtc,
+                            e.endUtc,
+                            e.locationTimeZone ?? displayTimeZone,
+                            viewerTimeZone
+                          )}
                         </div>
                       </div>
                       {e.kind === 'AVAILABILITY' || e.kind === 'BLOCKED' ? (

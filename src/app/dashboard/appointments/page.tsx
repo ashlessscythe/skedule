@@ -65,6 +65,7 @@ export default async function AppointmentsPage() {
     status: a.status,
     locationId: a.locationId,
     locationName: a.location.name,
+    locationTimeZone: a.location.timeZone,
     clientId: a.clientId,
     clientFirstName: a.client.firstName,
     clientLastName: a.client.lastName,
@@ -83,7 +84,8 @@ export default async function AppointmentsPage() {
         <div className="space-y-1">
           <h1 className="text-2xl font-semibold tracking-tight">Appointments</h1>
           <p className="text-sm text-muted-foreground">
-            This calendar week (UTC). Filter, sort, and paginate below — defaults to upcoming only.
+            This calendar week (UTC boundaries). Times are shown in each location's timezone.
+            Filter, sort, and paginate below — defaults to upcoming only.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">

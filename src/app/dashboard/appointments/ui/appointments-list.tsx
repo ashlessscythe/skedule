@@ -25,6 +25,8 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { ResponsiveDataList } from '@/components/responsive-data-list';
+import { formatDashboardDateTimeWithZoneHint } from '@/lib/scheduling/time';
+import { useViewerTimeZone } from '@/lib/scheduling/use-viewer-time-zone';
 
 const PAGE_SIZE = 25;
 const STAFF_UNASSIGNED = '__unassigned__';
@@ -36,6 +38,7 @@ export type AppointmentRow = {
   status: string;
   locationId: string;
   locationName: string;
+  locationTimeZone: string;
   clientId: string;
   clientFirstName: string;
   clientLastName: string;
@@ -169,6 +172,7 @@ export function AppointmentsList(props: {
   const q = sp.get('q')?.trim().toLowerCase() ?? '';
 
   const [now] = useState(() => Date.now());
+  const viewerTimeZone = useViewerTimeZone();
 
   const processed = useMemo(() => {
     let list = props.rows;
@@ -413,8 +417,8 @@ export function AppointmentsList(props: {
           </label>
         </div>
         <p className="text-xs text-muted-foreground">
-          {processed.length} appointment{processed.length !== 1 ? 's' : ''} match · Week (UTC) ·{' '}
-          {PAGE_SIZE} per page
+          {processed.length} appointment{processed.length !== 1 ? 's' : ''} match · Times at each
+          location (labeled local time or zone) · {PAGE_SIZE} per page
         </p>
       </div>
 
@@ -450,7 +454,7 @@ export function AppointmentsList(props: {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>{headerBtn('startTime', 'When (UTC)')}</TableHead>
+                  <TableHead>{headerBtn('startTime', 'When')}</TableHead>
                   <TableHead>{headerBtn('client', 'Client')}</TableHead>
                   <TableHead>{headerBtn('service', 'Service')}</TableHead>
                   <TableHead>{headerBtn('staff', 'Staff')}</TableHead>
@@ -469,7 +473,11 @@ export function AppointmentsList(props: {
                   slice.map((a) => (
                     <TableRow key={a.id}>
                       <TableCell className="font-mono text-xs text-muted-foreground">
-                        {a.startTime}
+                        {formatDashboardDateTimeWithZoneHint(
+                          a.startTime,
+                          a.locationTimeZone,
+                          viewerTimeZone
+                        )}
                       </TableCell>
                       <TableCell>
                         <div className="text-sm font-medium">
@@ -519,9 +527,13 @@ export function AppointmentsList(props: {
                   <li key={a.id} className="space-y-3 p-4">
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <div className="text-xs font-medium text-muted-foreground">When (UTC)</div>
-                        <div className="break-all font-mono text-xs text-muted-foreground">
-                          {a.startTime}
+                        <div className="text-xs font-medium text-muted-foreground">When</div>
+                        <div className="font-mono text-xs text-muted-foreground">
+                          {formatDashboardDateTimeWithZoneHint(
+                          a.startTime,
+                          a.locationTimeZone,
+                          viewerTimeZone
+                        )}
                         </div>
                       </div>
                       <Badge variant={statusVariant(a.status)} className="shrink-0">

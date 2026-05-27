@@ -30,6 +30,8 @@ export type CalendarEvent = {
   staffId: string | null;
   /** Present when the API can resolve the location (e.g. availability rows). */
   locationName?: string | null;
+  /** IANA zone for the event's location (appointments and location-scoped availability). */
+  locationTimeZone?: string | null;
   /** Human-readable staff scope: a name, or "All staff" when the row applies to everyone. */
   staffLabel?: string | null;
 };
@@ -102,6 +104,7 @@ export async function GET(req: Request) {
           locationId: a.locationId,
           staffId: a.staffId ?? null,
           locationName: locationMeta.get(a.locationId)?.name ?? null,
+          locationTimeZone: locationMeta.get(a.locationId)?.timeZone ?? null,
           staffLabel: a.staff ? staffName : 'Unassigned',
         });
       }
@@ -173,6 +176,7 @@ export async function GET(req: Request) {
               locationId,
               staffId: r.staffId ?? null,
               locationName: loc.name,
+              locationTimeZone: tz,
               staffLabel: r.staffId
                 ? (availStaffNameById.get(r.staffId) ?? r.staffId)
                 : 'All staff',
@@ -205,6 +209,7 @@ export async function GET(req: Request) {
             locationId,
             staffId: r.staffId ?? null,
             locationName: loc.name,
+            locationTimeZone: tz,
             staffLabel: r.staffId
               ? (availStaffNameById.get(r.staffId) ?? r.staffId)
               : 'All staff',
