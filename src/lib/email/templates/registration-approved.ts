@@ -1,3 +1,11 @@
+import {
+  escapeHtml,
+  renderEmailButton,
+  renderEmailCallout,
+  renderEmailLayout,
+  renderEmailParagraph,
+} from './layout';
+
 export type RegistrationApprovedTemplateInput = {
   tenantName: string;
   userName: string;
@@ -5,40 +13,35 @@ export type RegistrationApprovedTemplateInput = {
 };
 
 export function renderRegistrationApprovedEmail(input: RegistrationApprovedTemplateInput) {
-  const login =
-    input.loginUrl != null && input.loginUrl.trim()
-      ? `<p style="margin:16px 0 0 0"><a href="${input.loginUrl}">Sign in</a></p>`
-      : '';
+  const tenant = escapeHtml(input.tenantName);
+  const loginUrl = input.loginUrl?.trim() ?? '';
 
-  const html = `<!doctype html>
-<html>
-  <body style="font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; color: #0a0a0a;">
-    <div style="max-width: 560px; margin: 0 auto; padding: 24px;">
-      <h1 style="font-size: 18px; margin: 0 0 12px 0;">You’re approved</h1>
-      <p style="margin: 0 0 12px 0;">Hi ${escapeHtml(input.userName)},</p>
-      <p style="margin: 0 0 12px 0;">
-        Your account for <strong>${escapeHtml(input.tenantName)}</strong> has been approved. You can now sign in.
-      </p>
-      ${login}
-      <p style="margin: 20px 0 0 0; font-size: 12px; color: #6b7280;">
-        This message was sent by Skedule on behalf of ${escapeHtml(input.tenantName)}.
-      </p>
-    </div>
-  </body>
-</html>`;
+  const bodyParts = [
+    renderEmailParagraph(`Hi ${escapeHtml(input.userName)},`),
+    renderEmailParagraph(
+      `Your account for <strong>${tenant}</strong> has been approved. You can now sign in and start using the platform.`
+    ),
+    renderEmailCallout(
+      '<strong>You&rsquo;re all set.</strong> Your administrator has granted access. Sign in with the email address you registered with.',
+      'success'
+    ),
+  ];
+
+  if (loginUrl) {
+    bodyParts.push(renderEmailButton(loginUrl, 'Sign in', 'success'));
+  }
+
+  const html = renderEmailLayout({
+    title: 'You\u2019re approved',
+    badge: 'Access granted',
+    bodyHtml: bodyParts.join(''),
+    footerHtml: `This message was sent by Skedule on behalf of ${tenant}.`,
+    accent: 'success',
+    preheader: `Your access to ${input.tenantName} has been approved.`,
+  });
 
   return {
     subject: `Access approved - ${input.tenantName}`,
     html,
   };
 }
-
-function escapeHtml(s: string) {
-  return s
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#039;');
-}
-

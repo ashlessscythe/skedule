@@ -1,3 +1,11 @@
+import {
+  escapeHtml,
+  renderEmailCallout,
+  renderEmailDetailCard,
+  renderEmailLayout,
+  renderEmailParagraph,
+} from './layout';
+
 export type AppointmentReminderTemplateInput = {
   tenantName: string;
   clientName: string;
@@ -6,37 +14,32 @@ export type AppointmentReminderTemplateInput = {
 };
 
 export function renderAppointmentReminderEmail(input: AppointmentReminderTemplateInput) {
-  const html = `<!doctype html>
-<html>
-  <body style="font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; color: #0a0a0a;">
-    <div style="max-width: 560px; margin: 0 auto; padding: 24px;">
-      <h1 style="font-size: 18px; margin: 0 0 12px 0;">Reminder: upcoming appointment</h1>
-      <p style="margin: 0 0 12px 0;">Hi ${escapeHtml(input.clientName)},</p>
-      <p style="margin: 0 0 12px 0;">
-        This is a reminder from <strong>${escapeHtml(input.tenantName)}</strong>.
-      </p>
-      <div style="border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px;">
-        <div><strong>When:</strong> ${escapeHtml(input.startTimeLocal)}</div>
-        <div style="margin-top: 6px;"><strong>Where:</strong> ${escapeHtml(input.locationName)}</div>
-      </div>
-      <p style="margin: 20px 0 0 0; font-size: 12px; color: #6b7280;">
-        This message was sent by Skedule on behalf of ${escapeHtml(input.tenantName)}.
-      </p>
-    </div>
-  </body>
-</html>`;
+  const tenant = escapeHtml(input.tenantName);
+
+  const bodyHtml = [
+    renderEmailParagraph(`Hi ${escapeHtml(input.clientName)},`),
+    renderEmailParagraph(`This is a friendly reminder from <strong>${tenant}</strong>.`),
+    renderEmailDetailCard([
+      { label: 'When', value: escapeHtml(input.startTimeLocal) },
+      { label: 'Where', value: escapeHtml(input.locationName) },
+    ]),
+    renderEmailCallout(
+      'Please arrive a few minutes early. Contact the office if you need to reschedule.',
+      'info'
+    ),
+  ].join('');
+
+  const html = renderEmailLayout({
+    title: 'Reminder: upcoming appointment',
+    badge: 'Reminder',
+    bodyHtml,
+    footerHtml: `This message was sent by Skedule on behalf of ${tenant}.`,
+    accent: 'info',
+    preheader: `Reminder: you have an upcoming appointment with ${input.tenantName}.`,
+  });
 
   return {
     subject: `Reminder: appointment at ${input.tenantName}`,
     html,
   };
-}
-
-function escapeHtml(s: string) {
-  return s
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#039;');
 }
