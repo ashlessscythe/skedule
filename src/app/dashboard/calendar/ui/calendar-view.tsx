@@ -263,7 +263,7 @@ export function CalendarView(props: {
                     <div
                       key={e.id}
                       className={cn(
-                        'rounded-lg border px-2 py-1.5',
+                        'min-w-0 overflow-hidden rounded-lg border px-2 py-1.5',
                         e.kind === 'APPOINTMENT'
                           ? 'border-primary/30 bg-primary/5'
                           : e.kind === 'BLOCKED'
@@ -271,15 +271,15 @@ export function CalendarView(props: {
                             : 'border-emerald-500/30 bg-emerald-500/5'
                       )}
                     >
-                      <div className="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0.5">
-                        <div className="min-w-0 text-[0.7rem] font-medium uppercase tracking-wide text-muted-foreground">
+                      <div className="flex min-w-0 flex-col gap-0.5">
+                        <div className="text-[0.7rem] font-medium uppercase tracking-wide text-muted-foreground">
                           {e.kind === 'APPOINTMENT'
                             ? 'Appointment'
                             : e.kind === 'BLOCKED'
                               ? 'Blocked'
                               : 'Availability'}
                         </div>
-                        <div className="shrink-0 font-mono text-[0.7rem] text-muted-foreground">
+                        <div className="min-w-0 font-mono text-[0.7rem] leading-snug break-words text-muted-foreground">
                           {formatDashboardTimeRangeWithZoneHint(
                             e.startUtc,
                             e.endUtc,

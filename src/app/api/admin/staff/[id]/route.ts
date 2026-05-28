@@ -119,6 +119,7 @@ export async function PATCH(
           },
         });
       }
+      console.log('updatedUser', updatedUser);
 
       if (emailChanged || isActiveChanged) {
         await invalidatePasswordResetTokens(existing.userId, tx);
