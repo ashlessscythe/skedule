@@ -6,9 +6,18 @@ import { signIn } from 'next-auth/react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 
+const SESSION_MESSAGES: Record<string, string> = {
+  email_changed:
+    'Your email was updated. Sign in with your new email address on all devices.',
+  password_changed:
+    'Your password was updated. Sign in again with your new password.',
+};
+
 export function LoginForm() {
   const searchParams = useSearchParams();
   const next = searchParams.get('next') ?? '/dashboard';
+  const reason = searchParams.get('reason');
+  const sessionMessage = reason ? SESSION_MESSAGES[reason] : null;
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -50,6 +59,12 @@ export function LoginForm() {
       </div>
 
       <div className="mt-6 space-y-4">
+        {sessionMessage ? (
+          <div className="rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-sm text-foreground">
+            {sessionMessage}
+          </div>
+        ) : null}
+
         <label className="block space-y-1">
           <span className="text-sm font-medium">Email</span>
           <input

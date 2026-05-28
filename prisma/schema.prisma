@@ -92,6 +92,7 @@ model User {
   firstName    String
   lastName     String
   isActive     Boolean       @default(true)
+  sessionVersion Int         @default(0)
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 
@@ -100,6 +101,24 @@ model User {
   auditLogs    AuditLog[]
   availabilities Availability[]
   passwordResetTokens PasswordResetToken[]
+  emailChangeVerifications EmailChangeVerification[]
+}
+
+model EmailChangeVerification {
+  id           String   @id @default(cuid())
+  userId       String
+  newEmail     String
+  codeHash     String
+  attemptCount Int      @default(0)
+  createdAt    DateTime @default(now())
+  expiresAt    DateTime
+  usedAt       DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, createdAt])
+  @@index([expiresAt])
 }
 
 model PasswordResetToken {

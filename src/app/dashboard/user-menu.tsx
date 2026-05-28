@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { signOut } from 'next-auth/react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
@@ -31,10 +32,15 @@ export function UserMenu({ email }: { email: string }) {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuGroup>
-          <DropdownMenuLabel className="max-w-[240px] truncate">
-            {email}
-          </DropdownMenuLabel>
+          <DropdownMenuLabel className="max-w-[240px] truncate">{email}</DropdownMenuLabel>
           <DropdownMenuSeparator />
+          <DropdownMenuItem
+            render={
+              <Link href="/dashboard/account" className="cursor-pointer">
+                Account settings
+              </Link>
+            }
+          />
           <DropdownMenuItem
             closeOnClick={false}
             className="cursor-pointer"
@@ -50,4 +56,3 @@ export function UserMenu({ email }: { email: string }) {
     </DropdownMenu>
   );
 }
-

@@ -14,6 +14,7 @@ type AuthUser = {
   name: string;
   roles: SessionRoleAssignment[];
   primaryTenantId: string;
+  sessionVersion: number;
 };
 
 export const authOptions: NextAuthOptions = {
@@ -35,7 +36,14 @@ export const authOptions: NextAuthOptions = {
 
         const user = await prisma.user.findUnique({
           where: { email },
-          include: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+            passwordHash: true,
+            isActive: true,
+            sessionVersion: true,
             tenants: {
               select: { tenantId: true, role: true, status: true },
             },
@@ -60,6 +68,7 @@ export const authOptions: NextAuthOptions = {
           name: `${user.firstName} ${user.lastName}`.trim(),
           roles,
           primaryTenantId: roles[0]!.tenantId,
+          sessionVersion: user.sessionVersion,
         };
 
         return authUser;
@@ -73,13 +82,35 @@ export const authOptions: NextAuthOptions = {
         token.userId = u.id;
         token.roles = u.roles;
         token.primaryTenantId = u.primaryTenantId;
+        token.sessionVersion = u.sessionVersion;
       }
       return token;
     },
     async session({ session, token }) {
-      session.userId = token.userId ?? '';
+      if (!token.userId) {
+        session.error = 'SessionExpired';
+        return session;
+      }
+
+      const dbUser = await prisma.user.findUnique({
+        where: { id: token.userId },
+        select: { sessionVersion: true, isActive: true, email: true },
+      });
+
+      if (
+        !dbUser?.isActive ||
+        dbUser.sessionVersion !== (token.sessionVersion as number | undefined)
+      ) {
+        session.error = 'SessionExpired';
+        return session;
+      }
+
+      session.userId = token.userId;
       session.roles = (token.roles ?? []) as SessionRoleAssignment[];
       session.primaryTenantId = token.primaryTenantId ?? '';
+      if (session.user) {
+        session.user.email = dbUser.email;
+      }
       return session;
     },
   },

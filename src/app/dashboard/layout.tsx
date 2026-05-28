@@ -9,10 +9,11 @@ import { buttonVariants } from '@/components/ui/button';
 import { TenantSwitcher } from '@/app/dashboard/ui/tenant-switcher';
 import { DashboardMobileNav } from '@/app/dashboard/ui/dashboard-mobile-nav';
 import { buildDashboardNav } from '@/app/dashboard/nav-config';
+import { UserMenu } from '@/app/dashboard/user-menu';
 
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
   const session = await getServerSession(authOptions);
-  if (!session) redirect('/auth/login');
+  if (!session || session.error === 'SessionExpired') redirect('/auth/login');
 
   const roleForTenant = session.roles.find((r) => r.tenantId === session.primaryTenantId)?.role;
   const isAdmin = roleForTenant === 'ADMIN';
@@ -70,9 +71,10 @@ export default async function DashboardLayout({ children }: { children: ReactNod
               />
             </div>
           </div>
-          <div className="mx-auto flex w-full max-w-6xl items-center px-3 pb-3 sm:px-6 sm:pb-4 xl:max-w-7xl 2xl:max-w-screen-2xl">
-            <div className="ml-auto">
+          <div className="mx-auto flex w-full max-w-6xl items-center gap-3 px-3 pb-3 sm:px-6 sm:pb-4 xl:max-w-7xl 2xl:max-w-screen-2xl">
+            <div className="ml-auto flex items-center gap-3">
               <TenantSwitcher />
+              <UserMenu email={session.user?.email ?? ''} />
             </div>
           </div>
         </header>

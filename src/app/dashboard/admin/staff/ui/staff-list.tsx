@@ -307,6 +307,9 @@ export function StaffList(props: { rows: StaffRow[] }) {
                             role: m.role,
                             status: m.status,
                             email: m.user.email,
+                            firstName: m.user.firstName ?? '',
+                            lastName: m.user.lastName ?? '',
+                            isActive: m.user.isActive,
                           }}
                         />
                       </TableCell>
@@ -348,6 +351,9 @@ export function StaffList(props: { rows: StaffRow[] }) {
                         role: m.role,
                         status: m.status,
                         email: m.user.email,
+                        firstName: m.user.firstName ?? '',
+                        lastName: m.user.lastName ?? '',
+                        isActive: m.user.isActive,
                       }}
                     />
                   </li>

@@ -6,6 +6,7 @@ declare module 'next-auth' {
     userId: string;
     primaryTenantId: string;
     roles: { tenantId: string; role: 'ADMIN' | 'STAFF' }[];
+    error?: 'SessionExpired';
   }
 }
 
@@ -14,6 +15,7 @@ declare module 'next-auth/jwt' {
     userId?: string;
     primaryTenantId?: string;
     roles?: { tenantId: string; role: 'ADMIN' | 'STAFF' }[];
+    sessionVersion?: number;
   }
 }
 
