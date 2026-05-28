@@ -22,26 +22,55 @@ export async function POST(req: Request) {
     );
   }
 
+  const now = new Date();
   const expiresAt = new Date(
-    Date.now() + (input.expiresInHours ?? 72) * 60 * 60 * 1000
+    now.getTime() + (input.expiresInHours ?? 72) * 60 * 60 * 1000
   );
   const token = generateOpaqueToken(32);
 
-  const created = await prisma.intakeToken.create({
-    data: {
-      tenantId: ctx.tenantId,
-      appointmentId: input.appointmentId ?? null,
-      clientId: input.clientId ?? null,
-      token,
-      expiresAt,
-    },
+  const created = await prisma.$transaction(async (tx) => {
+    if (input.clientId) {
+      await tx.intakeToken.updateMany({
+        where: {
+          tenantId: ctx.tenantId,
+          clientId: input.clientId,
+          usedAt: null,
+          expiresAt: { gt: now },
+        },
+        data: { expiresAt: now },
+      });
+    } else if (input.appointmentId) {
+      await tx.intakeToken.updateMany({
+        where: {
+          tenantId: ctx.tenantId,
+          appointmentId: input.appointmentId,
+          usedAt: null,
+          expiresAt: { gt: now },
+        },
+        data: { expiresAt: now },
+      });
+    }
+
+    return tx.intakeToken.create({
+      data: {
+        tenantId: ctx.tenantId,
+        appointmentId: input.appointmentId ?? null,
+        clientId: input.clientId ?? null,
+        token,
+        expiresAt,
+      },
+    });
   });
+
+  const baseUrl = process.env.NEXTAUTH_URL?.replace(/\/+$/, '') ?? '';
+  const path = `/intake/${created.token}`;
+  const url = baseUrl ? `${baseUrl}${path}` : path;
 
   return NextResponse.json(
     {
       token: created.token,
       expiresAt: created.expiresAt,
-      url: `/intake/${created.token}`,
+      url,
     },
     { status: 201 }
   );
