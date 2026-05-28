@@ -50,6 +50,8 @@ describe('/api/qr/[token]', () => {
         deletedAt: null,
         tenantId: 't1',
         clientId: 'c1',
+        startTime: new Date('2026-01-01T10:00:00.000Z'),
+        endTime: new Date('2026-01-01T11:00:00.000Z'),
       },
     });
     const { POST } = await import('./route');
@@ -72,6 +74,8 @@ describe('/api/qr/[token]', () => {
         deletedAt: null,
         tenantId: 't1',
         clientId: 'c1',
+        startTime: new Date('2026-01-01T10:00:00.000Z'),
+        endTime: new Date('2026-01-01T11:00:00.000Z'),
       },
     });
     const { POST } = await import('./route');
@@ -105,6 +109,56 @@ describe('/api/qr/[token]', () => {
     expect(body.error).toMatch(/cancelled/i);
   });
 
+  it('returns 400 when check-in window is not open yet', async () => {
+    vi.setSystemTime(new Date('2026-01-01T00:00:00.000Z'));
+    prismaMocks.findUnique.mockResolvedValueOnce({
+      id: 'qr1',
+      usedAt: null,
+      expiresAt: new Date('2026-01-02T00:00:00.000Z'),
+      appointment: {
+        id: 'a1',
+        status: 'SCHEDULED',
+        deletedAt: null,
+        tenantId: 't1',
+        clientId: 'c1',
+        startTime: new Date('2026-01-02T10:00:00.000Z'),
+        endTime: new Date('2026-01-02T11:00:00.000Z'),
+      },
+    });
+    const { POST } = await import('./route');
+    const res = await POST(new Request('http://test', { method: 'POST' }), {
+      params: Promise.resolve({ token: 't' }),
+    });
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.error).toMatch(/too early/i);
+  });
+
+  it('returns 400 after appointment end', async () => {
+    vi.setSystemTime(new Date('2026-01-01T12:00:00.000Z'));
+    prismaMocks.findUnique.mockResolvedValueOnce({
+      id: 'qr1',
+      usedAt: null,
+      expiresAt: new Date('2026-01-02T00:00:00.000Z'),
+      appointment: {
+        id: 'a1',
+        status: 'SCHEDULED',
+        deletedAt: null,
+        tenantId: 't1',
+        clientId: 'c1',
+        startTime: new Date('2026-01-01T10:00:00.000Z'),
+        endTime: new Date('2026-01-01T11:00:00.000Z'),
+      },
+    });
+    const { POST } = await import('./route');
+    const res = await POST(new Request('http://test', { method: 'POST' }), {
+      params: Promise.resolve({ token: 't' }),
+    });
+    expect(res.status).toBe(400);
+    const body = await res.json();
+    expect(body.error).toMatch(/no longer available/i);
+  });
+
   it('marks appointment CHECKED_IN on success', async () => {
     prismaMocks.findUnique.mockResolvedValueOnce({
       id: 'qr1',
@@ -116,6 +170,8 @@ describe('/api/qr/[token]', () => {
         deletedAt: null,
         tenantId: 't1',
         clientId: 'c1',
+        startTime: new Date('2026-01-01T10:00:00.000Z'),
+        endTime: new Date('2026-01-01T11:00:00.000Z'),
       },
     });
     const { POST } = await import('./route');

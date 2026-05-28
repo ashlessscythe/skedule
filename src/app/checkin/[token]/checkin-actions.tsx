@@ -19,6 +19,8 @@ export function CheckinActions({
   location,
   startTimeIso,
   endTimeIso,
+  heading = 'Before you arrive',
+  hint = 'Use Google Calendar or download the .ics file for Apple Calendar, Outlook, and other apps.',
 }: {
   appointmentId: string;
   tenantName: string;
@@ -27,6 +29,8 @@ export function CheckinActions({
   location: LocationAddressFields;
   startTimeIso: string;
   endTimeIso: string;
+  heading?: string;
+  hint?: string;
 }) {
   const startUtc = new Date(startTimeIso);
   const endUtc = new Date(endTimeIso);
@@ -73,7 +77,7 @@ export function CheckinActions({
   return (
     <div className="mt-4 space-y-3 border-t pt-4">
       <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-        Before you arrive
+        {heading}
       </div>
       <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
         <a
@@ -82,7 +86,7 @@ export function CheckinActions({
           rel="noopener noreferrer"
           className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'justify-center')}
         >
-          Add to Google Calendar
+          Add reminder (Google Calendar)
         </a>
         <Button
           type="button"
@@ -91,7 +95,7 @@ export function CheckinActions({
           className="justify-center"
           onClick={onDownloadIcs}
         >
-          Download .ics
+          Add reminder (.ics)
         </Button>
         {mapsUrl ? (
           <a
@@ -104,9 +108,7 @@ export function CheckinActions({
           </a>
         ) : null}
       </div>
-      <p className="text-xs text-muted-foreground">
-        Use Google Calendar or download the .ics file for Apple Calendar, Outlook, and other apps.
-      </p>
+      <p className="text-xs text-muted-foreground">{hint}</p>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { writeAuditLog } from '@/lib/audit';
+import { getCheckinWindowState } from '@/lib/checkin/checkin-window';
 
 export async function POST(
   _req: Request,
@@ -12,7 +13,15 @@ export async function POST(
     where: { token },
     include: {
       appointment: {
-        select: { id: true, status: true, deletedAt: true, tenantId: true, clientId: true },
+        select: {
+          id: true,
+          status: true,
+          deletedAt: true,
+          tenantId: true,
+          clientId: true,
+          startTime: true,
+          endTime: true,
+        },
       },
     },
   });
@@ -33,6 +42,23 @@ export async function POST(
     return NextResponse.json({ error: 'Already checked in' }, { status: 400 });
   if (qr.appointment.status !== 'SCHEDULED')
     return NextResponse.json({ error: 'Check-in not available' }, { status: 400 });
+
+  const windowState = getCheckinWindowState({
+    startTime: qr.appointment.startTime,
+    endTime: qr.appointment.endTime,
+  });
+  if (windowState === 'too_early') {
+    return NextResponse.json(
+      { error: 'Too early to check in. Check-in opens 24 hours before your appointment.' },
+      { status: 400 }
+    );
+  }
+  if (windowState === 'closed') {
+    return NextResponse.json(
+      { error: 'Check-in is no longer available for this appointment.' },
+      { status: 400 }
+    );
+  }
 
   const now = new Date();
   await prisma.$transaction(async (tx) => {

@@ -1,8 +1,11 @@
 import { prisma } from '@/lib/prisma';
 import { notFound } from 'next/navigation';
 import { findNewerActiveQrToken } from '@/lib/checkin/qr-token';
-import { CheckinCard } from './ui';
+import { getCheckinWindowState } from '@/lib/checkin/checkin-window';
+import { CheckinCard, type CheckinAppointmentProps } from './ui';
 import { CheckinStatusCard } from './checkin-status-card';
+import { CheckinTooEarlyCard } from './checkin-too-early-card';
+import { CheckinAlreadyCheckedInCard } from './checkin-already-checked-in-card';
 
 export default async function CheckinPage({
   params,
@@ -41,6 +44,8 @@ export default async function CheckinPage({
   if (!qr) notFound();
 
   const appointment = qr.appointment;
+  const appointmentProps = toCheckinAppointmentProps(appointment);
+
   if (appointment.deletedAt) {
     return (
       <CheckinShell>
@@ -88,9 +93,23 @@ export default async function CheckinPage({
   if (appointment.status === 'CHECKED_IN' || qr.usedAt) {
     return (
       <CheckinShell>
+        <CheckinAlreadyCheckedInCard appointment={appointmentProps} />
+      </CheckinShell>
+    );
+  }
+
+  const windowState = getCheckinWindowState({
+    startTime: appointment.startTime,
+    endTime: appointment.endTime,
+    now,
+  });
+
+  if (windowState === 'closed') {
+    return (
+      <CheckinShell>
         <CheckinStatusCard
-          title="Already checked in"
-          message="You're all set — we've recorded your check-in. You can close this page."
+          title="Check-in no longer available"
+          message="Your appointment time has passed and this check-in link is no longer valid. Please contact your scheduling office if you need help."
         />
       </CheckinShell>
     );
@@ -134,24 +153,45 @@ export default async function CheckinPage({
     );
   }
 
+  if (windowState === 'too_early') {
+    return (
+      <CheckinShell>
+        <CheckinTooEarlyCard appointment={appointmentProps} />
+      </CheckinShell>
+    );
+  }
+
   return (
     <CheckinShell>
-      <CheckinCard
-        token={token}
-        appointment={{
-          id: appointment.id,
-          startTimeIso: appointment.startTime.toISOString(),
-          endTimeIso: appointment.endTime.toISOString(),
-          status: appointment.status,
-          tenantName: appointment.tenant.name,
-          location: appointment.location,
-          client: appointment.client,
-          staff: appointment.staff,
-          type: appointment.type,
-        }}
-      />
+      <CheckinCard token={token} appointment={appointmentProps} />
     </CheckinShell>
   );
+}
+
+function toCheckinAppointmentProps(
+  appointment: {
+    id: string;
+    startTime: Date;
+    endTime: Date;
+    status: string;
+    tenant: { name: string };
+    location: CheckinAppointmentProps['location'];
+    client: CheckinAppointmentProps['client'];
+    staff: CheckinAppointmentProps['staff'];
+    type: CheckinAppointmentProps['type'];
+  }
+): CheckinAppointmentProps {
+  return {
+    id: appointment.id,
+    startTimeIso: appointment.startTime.toISOString(),
+    endTimeIso: appointment.endTime.toISOString(),
+    status: appointment.status,
+    tenantName: appointment.tenant.name,
+    location: appointment.location,
+    client: appointment.client,
+    staff: appointment.staff,
+    type: appointment.type,
+  };
 }
 
 function CheckinShell({ children }: { children: React.ReactNode }) {

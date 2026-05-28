@@ -2,9 +2,7 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { formatAppointmentWindowLocal } from '@/lib/email/format-appointment-local';
-import { formatLocationAddress } from '@/lib/appointment-client-links';
-import { CheckinActions } from './checkin-actions';
+import { CheckinAppointmentPanel } from './checkin-appointment-panel';
 
 export type CheckinAppointmentProps = {
   id: string;
@@ -38,18 +36,6 @@ export function CheckinCard({
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const startUtc = new Date(appointment.startTimeIso);
-  const endUtc = new Date(appointment.endTimeIso);
-  const whenLocal = formatAppointmentWindowLocal({
-    startUtc,
-    endUtc,
-    timeZone: appointment.location.timeZone,
-  });
-  const addressFormatted = formatLocationAddress(appointment.location);
-  const staffName = appointment.staff
-    ? `${appointment.staff.firstName} ${appointment.staff.lastName}`
-    : null;
-
   async function onCheckin() {
     setLoading(true);
     setError(null);
@@ -60,9 +46,11 @@ export function CheckinCard({
         const msg = body?.error ?? 'Unable to check in.';
         if (/already checked in/i.test(msg)) {
           setError('You have already checked in for this appointment.');
-        } else if (/expired/i.test(msg)) {
+        } else if (/too early/i.test(msg)) {
+          setError(msg);
+        } else if (/expired/i.test(msg) || /no longer available/i.test(msg)) {
           setError(
-            'This check-in link has expired. Please check your email for a newer link or contact your scheduling office.'
+            'Check-in is no longer available for this appointment. Please contact your scheduling office.'
           );
         } else if (/cancelled/i.test(msg)) {
           setError('This appointment was cancelled.');
@@ -79,56 +67,20 @@ export function CheckinCard({
 
   if (done) {
     return (
-      <div className="rounded-lg border bg-card p-6">
-        <div className="text-sm font-medium">Checked in.</div>
-        <div className="mt-1 text-sm text-muted-foreground">
-          You can close this page.
+      <div className="space-y-4">
+        <div className="rounded-lg border bg-card p-6">
+          <div className="text-sm font-medium">Checked in.</div>
+          <div className="mt-1 text-sm text-muted-foreground">
+            You&apos;re all set — we&apos;ve recorded your arrival.
+          </div>
         </div>
+        <CheckinAppointmentPanel appointment={appointment} />
       </div>
     );
   }
 
   return (
-    <div className="rounded-lg border bg-card p-6">
-      <div className="space-y-1">
-        <h2 className="text-xl font-semibold tracking-tight">Your appointment</h2>
-        <p className="text-sm text-muted-foreground">
-          {appointment.client.firstName} {appointment.client.lastName} — {appointment.tenantName}
-        </p>
-      </div>
-
-      <div className="mt-4 space-y-2 text-sm">
-        <div>
-          <span className="text-muted-foreground">When:</span>{' '}
-          <span className="font-medium">{whenLocal}</span>
-        </div>
-        <div>
-          <span className="text-muted-foreground">Where:</span>{' '}
-          <span className="font-medium">{appointment.location.name}</span>
-          {addressFormatted ? (
-            <div className="mt-0.5 text-muted-foreground">{addressFormatted}</div>
-          ) : null}
-        </div>
-        <div>
-          <span className="text-muted-foreground">Service:</span>{' '}
-          {appointment.type?.name ?? '—'}
-        </div>
-        <div>
-          <span className="text-muted-foreground">Staff:</span>{' '}
-          {staffName ?? 'Unassigned'}
-        </div>
-      </div>
-
-      <CheckinActions
-        appointmentId={appointment.id}
-        tenantName={appointment.tenantName}
-        serviceName={appointment.type?.name ?? null}
-        staffName={staffName}
-        location={appointment.location}
-        startTimeIso={appointment.startTimeIso}
-        endTimeIso={appointment.endTimeIso}
-      />
-
+    <CheckinAppointmentPanel appointment={appointment}>
       {error ? (
         <div className="mt-4 rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-sm text-destructive">
           {error}
@@ -140,6 +92,6 @@ export function CheckinCard({
           {loading ? 'Checking in…' : 'Check in'}
         </Button>
       </div>
-    </div>
+    </CheckinAppointmentPanel>
   );
 }
