@@ -64,6 +64,13 @@ vi.mock('@/lib/email/appointment-emails', () => ({
   sendAppointmentBookedEmail: vi.fn(async () => undefined),
 }));
 
+vi.mock('@/lib/checkin/qr-token', () => ({
+  ensureAppointmentQrToken: vi.fn(async () => ({
+    token: 'qr-tok',
+    expiresAt: new Date('2026-01-01T10:30:00.000Z'),
+  })),
+}));
+
 describe('/api/appointments', () => {
   beforeEach(() => {
     vi.clearAllMocks();

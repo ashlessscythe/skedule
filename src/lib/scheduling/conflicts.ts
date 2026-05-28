@@ -19,7 +19,7 @@ export async function assertNoConflict(args: {
       id: args.excludeAppointmentId ? { not: args.excludeAppointmentId } : undefined,
       startTime: { lt: args.endTimeUtc },
       endTime: { gt: args.startTimeUtc },
-      status: { in: ['SCHEDULED', 'COMPLETED'] },
+      status: { in: ['SCHEDULED', 'CHECKED_IN', 'COMPLETED'] },
     },
     select: { id: true, startTime: true, endTime: true },
   });

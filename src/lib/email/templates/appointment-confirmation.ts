@@ -2,6 +2,8 @@ import {
   escapeHtml,
   renderEmailButton,
   renderEmailCallout,
+  renderEmailCheckinBlock,
+  type EmailCheckinLinks,
   renderEmailDetailCard,
   renderEmailLayout,
   renderEmailParagraph,
@@ -13,6 +15,7 @@ export type AppointmentConfirmationTemplateInput = {
   startTimeLocal: string;
   locationName: string;
   manageUrl?: string;
+  checkin?: EmailCheckinLinks;
   /** When > 0, show a short note about additional occurrences in the same series. */
   seriesExtraCount?: number;
 };
@@ -40,6 +43,10 @@ export function renderAppointmentConfirmationEmail(
         'info'
       )
     );
+  }
+
+  if (input.checkin) {
+    bodyParts.push(renderEmailCheckinBlock(input.checkin));
   }
 
   if (input.manageUrl) {

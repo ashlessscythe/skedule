@@ -24,6 +24,18 @@ vi.mock('@/lib/email/resend', () => ({
   sendEmail: vi.fn(),
 }));
 
+vi.mock('@/lib/checkin/qr-token', () => ({
+  ensureAppointmentQrToken: vi.fn(async () => ({
+    token: 'qr-tok',
+    expiresAt: new Date('2025-06-15T14:30:00.000Z'),
+  })),
+  buildCheckinUrls: vi.fn(() => ({
+    checkinUrl: 'https://example.com/checkin/qr-tok',
+    pdfUrl: 'https://example.com/api/pdf/appointment-card/qr-tok',
+    qrImageUrl: 'https://example.com/api/qr/qr-tok/image',
+  })),
+}));
+
 function mockAppt(overrides: Partial<AppointmentEmailInclude> = {}): AppointmentEmailInclude {
   return {
     id: 'appt-1',
@@ -82,6 +94,8 @@ describe('sendAppointmentBookedEmail', () => {
     expect(call.subject).toContain('Clinic');
     expect(call.html).toContain('2');
     expect(call.html).toMatch(/more occurrence/i);
+    expect(call.html).toContain('Check in online');
+    expect(call.html).toContain('https://example.com/checkin/qr-tok');
   });
 
   it('uses tenant email from when configured', async () => {

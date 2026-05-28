@@ -1,6 +1,8 @@
 import {
   escapeHtml,
   renderEmailCallout,
+  renderEmailCheckinBlock,
+  type EmailCheckinLinks,
   renderEmailDetailCard,
   renderEmailLayout,
   renderEmailParagraph,
@@ -11,6 +13,7 @@ export type AppointmentUpdatedTemplateInput = {
   clientName: string;
   startTimeLocal: string;
   locationName: string;
+  checkin?: EmailCheckinLinks;
 };
 
 export function renderAppointmentUpdatedEmail(input: AppointmentUpdatedTemplateInput) {
@@ -29,6 +32,7 @@ export function renderAppointmentUpdatedEmail(input: AppointmentUpdatedTemplateI
       { label: 'When', value: escapeHtml(input.startTimeLocal) },
       { label: 'Where', value: escapeHtml(input.locationName) },
     ]),
+    ...(input.checkin ? [renderEmailCheckinBlock(input.checkin)] : []),
   ].join('');
 
   const html = renderEmailLayout({

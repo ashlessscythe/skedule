@@ -27,6 +27,7 @@ import {
 import { ResponsiveDataList } from '@/components/responsive-data-list';
 import { formatDashboardDateTimeWithZoneHint } from '@/lib/scheduling/time';
 import { useViewerTimeZone } from '@/lib/scheduling/use-viewer-time-zone';
+import { AppointmentCheckinActions } from './appointment-checkin-actions';
 
 const PAGE_SIZE = 25;
 const STAFF_UNASSIGNED = '__unassigned__';
@@ -59,6 +60,8 @@ function statusVariant(status: string): BadgeVariant {
   switch (status) {
     case 'SCHEDULED':
       return 'default';
+    case 'CHECKED_IN':
+      return 'secondary';
     case 'COMPLETED':
       return 'secondary';
     case 'CANCELLED':
@@ -70,7 +73,7 @@ function statusVariant(status: string): BadgeVariant {
   }
 }
 
-const STATUSES = ['SCHEDULED', 'COMPLETED', 'CANCELLED', 'NO_SHOW'] as const;
+const STATUSES = ['SCHEDULED', 'CHECKED_IN', 'COMPLETED', 'CANCELLED', 'NO_SHOW'] as const;
 
 type SortKey = 'startTime' | 'client' | 'location' | 'staff' | 'service';
 
@@ -460,12 +463,13 @@ export function AppointmentsList(props: {
                   <TableHead>{headerBtn('staff', 'Staff')}</TableHead>
                   <TableHead>{headerBtn('location', 'Location')}</TableHead>
                   <TableHead className="text-right">Status</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {slice.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="py-10 text-center text-sm">
+                    <TableCell colSpan={7} className="py-10 text-center text-sm">
                       No appointments match your filters.
                     </TableCell>
                   </TableRow>
@@ -507,6 +511,13 @@ export function AppointmentsList(props: {
                       <TableCell className="text-sm">{a.locationName}</TableCell>
                       <TableCell className="text-right">
                         <Badge variant={statusVariant(a.status)}>{a.status}</Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <AppointmentCheckinActions
+                          appointmentId={a.id}
+                          status={a.status}
+                          endTime={a.endTime}
+                        />
                       </TableCell>
                     </TableRow>
                   ))
@@ -573,6 +584,14 @@ export function AppointmentsList(props: {
                         <div className="text-xs font-medium text-muted-foreground">Location</div>
                         <div className="text-sm">{a.locationName}</div>
                       </div>
+                    </div>
+                    <div>
+                      <div className="text-xs font-medium text-muted-foreground">Check-in</div>
+                      <AppointmentCheckinActions
+                        appointmentId={a.id}
+                        status={a.status}
+                        endTime={a.endTime}
+                      />
                     </div>
                   </li>
                 ))}

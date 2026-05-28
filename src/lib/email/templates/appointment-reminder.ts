@@ -1,6 +1,8 @@
 import {
   escapeHtml,
   renderEmailCallout,
+  renderEmailCheckinBlock,
+  type EmailCheckinLinks,
   renderEmailDetailCard,
   renderEmailLayout,
   renderEmailParagraph,
@@ -11,6 +13,7 @@ export type AppointmentReminderTemplateInput = {
   clientName: string;
   startTimeLocal: string;
   locationName: string;
+  checkin?: EmailCheckinLinks;
 };
 
 export function renderAppointmentReminderEmail(input: AppointmentReminderTemplateInput) {
@@ -27,6 +30,7 @@ export function renderAppointmentReminderEmail(input: AppointmentReminderTemplat
       'Please arrive a few minutes early. Contact the office if you need to reschedule.',
       'info'
     ),
+    ...(input.checkin ? [renderEmailCheckinBlock(input.checkin)] : []),
   ].join('');
 
   const html = renderEmailLayout({

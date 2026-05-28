@@ -190,6 +190,37 @@ export function renderEmailParagraph(text: string): string {
   return `<p style="margin:0 0 12px 0;">${text}</p>`;
 }
 
+export type EmailCheckinLinks = {
+  checkinUrl: string;
+  qrImageUrl: string;
+  pdfUrl: string;
+};
+
+/** Check-in CTA, QR image, and PDF link for appointment emails. */
+export function renderEmailCheckinBlock(links: EmailCheckinLinks): string {
+  // const checkinUrl = escapeHtml(links.checkinUrl);
+  const qrImageUrl = escapeHtml(links.qrImageUrl);
+  const pdfUrl = escapeHtml(links.pdfUrl);
+
+  return [
+    renderEmailCallout(
+      'Scan the QR code or use the button when you arrive.',
+      'info'
+    ),
+    renderEmailButton(links.checkinUrl, 'Check in online', 'brand'),
+    `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:16px 0 0 0;">
+  <tr>
+    <td align="left">
+      <img src="${qrImageUrl}" alt="Check-in QR code" width="160" height="160" style="display:block;border:1px solid #e2e8f0;border-radius:8px;" />
+    </td>
+  </tr>
+</table>`,
+    `<p style="margin:12px 0 0 0;font-size:14px;line-height:1.5;">
+      <a href="${pdfUrl}" style="color:#1e40af;font-weight:600;text-decoration:underline;">Download appointment card (PDF)</a>
+    </p>`,
+  ].join('');
+}
+
 export function renderEmailMuted(text: string): string {
   return `<p style="margin:16px 0 0 0;font-size:14px;line-height:1.5;color:#64748b;">${text}</p>`;
 }

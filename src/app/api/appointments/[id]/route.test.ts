@@ -30,6 +30,14 @@ vi.mock('@/lib/email/appointment-emails', () => ({
   sendAppointmentUpdatedEmailForClient: (...args: unknown[]) => sendUpdatedMock(...args),
 }));
 
+vi.mock('@/lib/checkin/qr-token', () => ({
+  ensureAppointmentQrToken: vi.fn(async () => ({
+    token: 'qr-tok',
+    expiresAt: new Date('2026-01-01T11:00:00.000Z'),
+  })),
+  expireQrTokensForAppointment: vi.fn(async () => undefined),
+}));
+
 const prismaMock = {
   appointment: {
     findFirst: vi.fn(async () => null),

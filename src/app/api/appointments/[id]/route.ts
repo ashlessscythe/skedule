@@ -10,6 +10,10 @@ import {
   sendAppointmentCancelledEmailForClient,
   sendAppointmentUpdatedEmailForClient,
 } from '@/lib/email/appointment-emails';
+import {
+  ensureAppointmentQrToken,
+  expireQrTokensForAppointment,
+} from '@/lib/checkin/qr-token';
 
 const UpdateAppointmentSchema = z.object({
   locationId: z.string().min(1).optional(),
@@ -19,7 +23,7 @@ const UpdateAppointmentSchema = z.object({
   startTime: z.string().datetime().optional(),
   endTime: z.string().datetime().optional(),
   notes: z.string().optional().nullable(),
-  status: z.enum(['SCHEDULED', 'COMPLETED', 'CANCELLED', 'NO_SHOW']).optional(),
+  status: z.enum(['SCHEDULED', 'CHECKED_IN', 'COMPLETED', 'CANCELLED', 'NO_SHOW']).optional(),
 });
 
 export async function PATCH(
@@ -106,8 +110,15 @@ export async function PATCH(
       locationId !== existing.locationId);
 
   if (becameCancelled) {
+    await expireQrTokensForAppointment(updated.id);
     void sendAppointmentCancelledEmailForClient(updated);
   } else if (rescheduledWhileScheduled) {
+    await ensureAppointmentQrToken({
+      tenantId: ctx.tenantId,
+      appointmentId: updated.id,
+      expiresAt: updated.endTime,
+      rotate: true,
+    });
     void sendAppointmentUpdatedEmailForClient(updated);
   }
 
@@ -128,6 +139,7 @@ export async function DELETE(
   if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
   void sendAppointmentCancelledEmailForClient(existing);
+  await expireQrTokensForAppointment(id);
 
   const updated = await prisma.appointment.update({
     where: { id },

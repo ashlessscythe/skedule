@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { qrPngDataUrl } from '@/lib/qr/generate';
 import { generateAppointmentCardPdf } from '@/lib/pdf/appointment-card';
+import { buildCheckinUrls } from '@/lib/checkin/qr-token';
 
 export async function GET(
   _req: Request,
@@ -30,7 +31,7 @@ export async function GET(
   if (qr.appointment.deletedAt)
     return NextResponse.json({ error: 'Invalid appointment' }, { status: 400 });
 
-  const checkinUrl = `${process.env.NEXTAUTH_URL ?? ''}/checkin/${qr.token}`;
+  const { checkinUrl } = buildCheckinUrls(qr.token);
   const dataUrl = await qrPngDataUrl(checkinUrl);
   const b64 = dataUrl.split(',')[1] ?? '';
   const pngBytes = Uint8Array.from(Buffer.from(b64, 'base64'));

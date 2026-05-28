@@ -1,85 +1,77 @@
-## Skedule
+# Skedule
 
-Multi-tenant appointment management for clinics and similar organizations: staff schedule clients, admins configure the tenant, and clients can complete intake or check-in via token links. Built with Next.js App Router, Prisma, and Neon Postgres.
+Multi-tenant appointment scheduling for clinics and similar organizations. Staff manage clients and appointments; clients use token links for intake and QR check-in. Built with Next.js (App Router), Prisma, and PostgreSQL.
 
-- **Setup, stack, and auth details**: [documentation.md](documentation.md)
-- **Historical phased rollout**: [docs/phases.md](docs/phases.md)
+**More detail:** [documentation.md](documentation.md) (setup, env, email) · [docs/phases.md](docs/phases.md) (historical rollout notes)
 
-## Functionality
+## Features
 
-### Staff and scheduling
+### Staff
 
-- **Clients**: List, create, and update clients; generate per-client **intake links** (public form backed by intake tokens).
-- **Appointments**: Create, edit, reschedule, and cancel; conflict awareness and recurrence-related behavior live in `src/lib/scheduling/`.
-- **Calendar**: Calendar view backed by `/api/calendar/events`.
+- **Clients** — list, create, update; generate **intake links** (absolute URLs via `NEXTAUTH_URL`).
+- **Appointments** — create, reschedule, cancel; recurrence and conflict checks (`src/lib/scheduling/`).
+- **Appointments list** — copy **check-in link** or **download appointment card (PDF)** for upcoming visits.
+- **Calendar** — `/dashboard/calendar` backed by `/api/calendar/events`.
 
-### Administration (role-gated)
+### Admin (role-gated)
 
-- **Locations**, **appointment types**, and **availability** CRUD for the active tenant.
-- **Staff** management for tenant users.
-- **Branding** settings for the tenant.
-- **Audit log** viewer for operational history.
+- Locations (name, address, timezone), appointment types, availability, staff, branding, audit log.
 
-### Public and client-facing flows
+### Client-facing (no login)
 
-- **Registration** with admin approval (pending users are activated by an admin); optional Cloudflare Turnstile on public auth forms.
-- **Password reset** (forgot password + reset).
-- **Intake**: Public page at `/intake/[token]` submits to the intake API.
-- **Check-in**: Token-based check-in flow at `/checkin/[token]`.
-- **QR codes** and **appointment card PDF** generation via dedicated API routes (see `src/lib/qr/` and `src/lib/pdf/`).
+| Flow | URL | What clients get |
+|------|-----|----------------|
+| **Intake** | `/intake/[token]` | Confirm or update contact details (single-use token). |
+| **Check-in** | `/checkin/[token]` | View appointment details, **add to calendar** (Google Calendar or `.ics`), **open in Google Maps** (when the location has an address), then check in online. |
 
-### Email and reminders
+**Check-in lifecycle**
 
-- Transactional email via Resend (appointment confirmation, update, cancellation; registration pending and approved). Behavior is gated by env (see `documentation.md`).
-- Optional **reminder** job: `GET/POST /api/cron/appointment-reminders` with a shared secret header.
+- A QR token is created automatically when an appointment is booked (and rotated on reschedule); tokens expire at appointment end time.
+- Confirmation, reminder, and update emails include a check-in button, QR image, and PDF card link (not cancellation emails).
+- Successful check-in sets appointment status to **`CHECKED_IN`** (staff can mark **`COMPLETED`** later).
 
-### Reporting and multi-tenant use
+Staff can also mint or re-copy links via `POST /api/qr-tokens`. See `src/lib/checkin/`, `src/lib/qr/`, and `src/lib/pdf/`.
 
-- **Reporting** dashboard metrics (`src/lib/reporting-metrics.ts`).
-- **Tenant switcher** for users in multiple tenants (active tenant cookie + API under `/api/tenant/`).
+### Email and cron
 
-### Platform mechanics
+- Resend for transactional mail (gated by `SEND_EMAIL`; see [documentation.md](documentation.md)).
+- Optional reminders: `GET` or `POST /api/cron/appointment-reminders` with `CRON_SECRET`.
 
-- **NextAuth** credentials sessions; server routes resolve the active tenant with `getTenantContext()` in `src/lib/tenant-context.ts` and enforce **ADMIN** vs **STAFF** where needed (`src/lib/security/rbac-mw.ts`).
+### Platform
+
+- NextAuth credentials; tenant scoping via `getTenantContext()`; **ADMIN** vs **STAFF** RBAC (`src/lib/security/rbac-mw.ts`).
+- Multi-tenant switcher for users in multiple organizations.
 
 ## Getting started
 
 ```bash
 npm install
 cp .env.example .env
-```
-
-Fill required variables (see `.env.example` and [documentation.md](documentation.md)).
-
-```bash
+# Set DATABASE_URL, NEXTAUTH_SECRET, NEXTAUTH_URL (required for public intake/check-in links)
 npm run prisma:migrate
 npm run prisma:seed
 npm run dev
 ```
 
-- App: `http://localhost:3000`
-- Login: `/auth/login`
-- Dashboard: `/dashboard`
+| URL | Purpose |
+|-----|---------|
+| `http://localhost:3000` | App |
+| `/auth/login` | Sign in |
+| `/dashboard` | Staff dashboard |
 
-Seed creates tenant **Acme Health Clinic** and users `admin@acmehealth.test` / `staff@acmehealth.test` (password `Admin123!`).
+**Seed:** tenant *Acme Health Clinic* — `admin@acmehealth.test` / `staff@acmehealth.test` (password `Admin123!`).
 
-## Tests and lint
+## Scripts
 
 ```bash
-npm test
+npm test              # unit tests
 npm run test:coverage
 npm run lint
+npm run build && npm start   # migrate deploy, then Next.js (production)
 ```
 
-## Reminder cron (optional)
+## Environment
 
-Configure `CRON_SECRET` (and optionally `REMINDER_HOURS_BEFORE`). Call `GET` or `POST /api/cron/appointment-reminders` with `Authorization: Bearer <CRON_SECRET>` or `x-cron-secret: <CRON_SECRET>`.
+Set **`NEXTAUTH_URL`** to your public origin (e.g. `https://app.example.com`) so intake links, check-in links, email QR images, and PDF cards use correct absolute URLs.
 
-## Deployment
-
-The `start` script runs Prisma migrations before Next.js:
-
-```bash
-npm run build
-npm start
-```
+Full variable list: [.env.example](.env.example) and [documentation.md](documentation.md).

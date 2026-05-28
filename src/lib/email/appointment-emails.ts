@@ -7,6 +7,11 @@ import { renderAppointmentConfirmationEmail } from '@/lib/email/templates/appoin
 import { renderAppointmentUpdatedEmail } from '@/lib/email/templates/appointment-updated';
 import { renderAppointmentCancelledEmail } from '@/lib/email/templates/appointment-cancelled';
 import { renderAppointmentReminderEmail } from '@/lib/email/templates/appointment-reminder';
+import {
+  buildCheckinUrls,
+  ensureAppointmentQrToken,
+} from '@/lib/checkin/qr-token';
+import type { EmailCheckinLinks } from '@/lib/email/templates/layout';
 
 export type AppointmentEmailInclude = Appointment & {
   tenant: Pick<Tenant, 'name'>;
@@ -25,6 +30,19 @@ export { apptEmailInclude };
 function clientEmail(appt: AppointmentEmailInclude): string | null {
   const e = appt.client.email?.trim();
   return e || null;
+}
+
+async function checkinLinksForAppointment(
+  appt: AppointmentEmailInclude
+): Promise<EmailCheckinLinks | undefined> {
+  if (appt.status !== 'SCHEDULED') return undefined;
+  const qr = await ensureAppointmentQrToken({
+    tenantId: appt.tenantId,
+    appointmentId: appt.id,
+    expiresAt: appt.endTime,
+    rotate: false,
+  });
+  return buildCheckinUrls(qr.token);
 }
 
 function commonFields(appt: AppointmentEmailInclude) {
@@ -58,12 +76,14 @@ export async function sendAppointmentBookedEmail(options: {
     const fields = commonFields(appt);
     if (!fields) return;
 
+    const checkin = await checkinLinksForAppointment(appt);
     const { subject, html } = renderAppointmentConfirmationEmail({
       tenantName: fields.tenantName,
       clientName: fields.clientName,
       startTimeLocal: fields.startTimeLocal,
       locationName: fields.locationName,
       seriesExtraCount: options.seriesExtraCount,
+      checkin,
     });
 
     const from = await getTenantEmailFrom(appt.tenantId);
@@ -79,11 +99,13 @@ export async function sendAppointmentUpdatedEmailForClient(appt: AppointmentEmai
     const fields = commonFields(appt);
     if (!fields) return;
 
+    const checkin = await checkinLinksForAppointment(appt);
     const { subject, html } = renderAppointmentUpdatedEmail({
       tenantName: fields.tenantName,
       clientName: fields.clientName,
       startTimeLocal: fields.startTimeLocal,
       locationName: fields.locationName,
+      checkin,
     });
 
     const from = await getTenantEmailFrom(appt.tenantId);
@@ -118,11 +140,13 @@ export async function sendAppointmentReminderEmailForClient(appt: AppointmentEma
   const fields = commonFields(appt);
   if (!fields) return false;
 
+  const checkin = await checkinLinksForAppointment(appt);
   const { subject, html } = renderAppointmentReminderEmail({
     tenantName: fields.tenantName,
     clientName: fields.clientName,
     startTimeLocal: fields.startTimeLocal,
     locationName: fields.locationName,
+    checkin,
   });
 
   const from = await getTenantEmailFrom(appt.tenantId);

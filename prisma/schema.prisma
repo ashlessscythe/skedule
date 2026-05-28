@@ -21,6 +21,7 @@ enum MembershipStatus {
 
 enum AppointmentStatus {
   SCHEDULED
+  CHECKED_IN
   COMPLETED
   CANCELLED
   NO_SHOW

@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { getTenantContext } from '@/lib/tenant-context';
 import { generateOpaqueToken } from '@/lib/security/tokens';
+import { appUrl } from '@/lib/app-url';
 
 const CreateIntakeTokenSchema = z.object({
   appointmentId: z.string().optional().nullable(),
@@ -62,9 +63,7 @@ export async function POST(req: Request) {
     });
   });
 
-  const baseUrl = process.env.NEXTAUTH_URL?.replace(/\/+$/, '') ?? '';
-  const path = `/intake/${created.token}`;
-  const url = baseUrl ? `${baseUrl}${path}` : path;
+  const url = appUrl(`/intake/${created.token}`);
 
   return NextResponse.json(
     {

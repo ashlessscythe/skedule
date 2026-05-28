@@ -49,6 +49,21 @@ describe('renderAppointmentConfirmationEmail', () => {
     });
     expect(html).toContain('https://example.com/a/1');
   });
+
+  it('includes check-in block when checkin links set', () => {
+    const { html } = renderAppointmentConfirmationEmail({
+      ...base,
+      checkin: {
+        checkinUrl: 'https://example.com/checkin/tok',
+        qrImageUrl: 'https://example.com/api/qr/tok/image',
+        pdfUrl: 'https://example.com/api/pdf/appointment-card/tok',
+      },
+    });
+    expect(html).toContain('Check in online');
+    expect(html).toContain('https://example.com/checkin/tok');
+    expect(html).toContain('https://example.com/api/qr/tok/image');
+    expect(html).toContain('Download appointment card (PDF)');
+  });
 });
 
 describe('renderAppointmentUpdatedEmail', () => {

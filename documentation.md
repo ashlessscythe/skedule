@@ -43,10 +43,13 @@ Email:
 - Optional: `REGISTRATION_ADMIN_NOTIFY_EMAILS` (comma-separated fallback recipients for pending registration notifications)
 
 When `SEND_EMAIL=true` and the client has an email address, the app sends:
-- **Confirmation** after creating an appointment (one email for the series; body notes extra occurrences when applicable)
-- **Updated** when time or location changes (still `SCHEDULED`)
-- **Cancelled** when status becomes `CANCELLED` or the appointment is deleted (soft cancel)
-- **Registration received** on public signup (pending admin approval), and **approval** once activated
+- **Confirmation** after creating an appointment (one email for the series; body notes extra occurrences when applicable). Includes check-in link, QR image, and appointment card PDF when the appointment is `SCHEDULED`.
+- **Updated** when time or location changes (still `SCHEDULED`) — new check-in link/QR/PDF after token rotation on reschedule.
+- **Reminder** (cron) — same check-in block for upcoming `SCHEDULED` appointments.
+- **Cancelled** when status becomes `CANCELLED` or the appointment is deleted (soft cancel); no check-in links.
+- **Registration received** on public signup (pending admin approval), and **approval** once activated.
+
+Public check-in page (`/checkin/[token]`): appointment details, add to Google Calendar / download `.ics`, Google Maps when the location has address fields, then online check-in (`SCHEDULED` → `CHECKED_IN`).
 
 **Reminder emails** (optional):
 - Set `CRON_SECRET` to a long random string.

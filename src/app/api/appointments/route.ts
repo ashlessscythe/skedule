@@ -11,6 +11,7 @@ import {
 } from '@/lib/scheduling/recurrence';
 import { writeAuditLog } from '@/lib/audit';
 import { sendAppointmentBookedEmail } from '@/lib/email/appointment-emails';
+import { ensureAppointmentQrToken } from '@/lib/checkin/qr-token';
 
 const RecurrencePayloadSchema = z
   .object({
@@ -190,6 +191,13 @@ export async function POST(req: Request) {
       });
       seriesAppointmentIds.push(appt.id);
       if (i === 0) createdFirst = appt;
+
+      await ensureAppointmentQrToken({
+        tenantId: ctx.tenantId,
+        appointmentId: appt.id,
+        expiresAt: appt.endTime,
+        rotate: true,
+      });
 
       await writeAuditLog({
         tenantId: ctx.tenantId,
