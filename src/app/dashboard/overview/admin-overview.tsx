@@ -45,20 +45,22 @@ export function AdminOverview({ data }: { data: AdminOverviewData }) {
         />
       </div>
 
-      <TodayAppointmentsPanel
-        title="Today at a glance"
-        rows={data.todayTenantAppointments}
-        emptyMessage="No appointments scheduled for today."
-        viewAllHref="/dashboard/appointments"
-        showStaff
-      />
+      <div className="grid gap-4 lg:grid-cols-2">
+        <TodayAppointmentsPanel
+          title="Today at a glance"
+          rows={data.todayTenantAppointments}
+          emptyMessage="No appointments scheduled for today."
+          viewAllHref="/dashboard/appointments"
+          showStaff
+        />
 
-      <TodayAppointmentsPanel
-        title="Your schedule today"
-        rows={data.myTodayAppointments}
-        emptyMessage="No appointments assigned to you today."
-        viewAllHref="/dashboard/appointments"
-      />
+        <TodayAppointmentsPanel
+          title="Your schedule today"
+          rows={data.myTodayAppointments}
+          emptyMessage="No appointments assigned to you today."
+          viewAllHref="/dashboard/appointments"
+        />
+      </div>
 
       <div className="flex flex-wrap gap-2">
         <Link href="/dashboard/reporting" className={buttonVariants({ variant: 'outline' })}>

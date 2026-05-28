@@ -29,7 +29,7 @@ export function TodayAppointmentsPanel({
   showStaff = false,
 }: TodayAppointmentsPanelProps) {
   return (
-    <div className="rounded-lg border bg-card">
+    <div className="flex h-full flex-col rounded-lg border bg-card">
       <div className="border-b px-4 py-3">
         <h2 className="text-sm font-medium">{title}</h2>
       </div>
@@ -60,7 +60,7 @@ export function TodayAppointmentsPanel({
           ))}
         </ul>
       )}
-      <div className="border-t px-4 py-3">
+      <div className="mt-auto border-t px-4 py-3">
         <Link href={viewAllHref} className="text-sm font-medium text-primary hover:underline">
           View all appointments
         </Link>
