@@ -2,9 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import type { VariantProps } from 'class-variance-authority';
-import { Badge } from '@/components/ui/badge';
-import { badgeVariants } from '@/components/ui/badge';
+import { AppointmentStatusBadge } from '@/app/dashboard/ui/appointment-status-badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -53,25 +51,6 @@ export type AppointmentRow = {
 };
 
 type Option = { id: string; label: string };
-
-type BadgeVariant = NonNullable<VariantProps<typeof badgeVariants>['variant']>;
-
-function statusVariant(status: string): BadgeVariant {
-  switch (status) {
-    case 'SCHEDULED':
-      return 'default';
-    case 'CHECKED_IN':
-      return 'secondary';
-    case 'COMPLETED':
-      return 'secondary';
-    case 'CANCELLED':
-      return 'destructive';
-    case 'NO_SHOW':
-      return 'outline';
-    default:
-      return 'outline';
-  }
-}
 
 const STATUSES = ['SCHEDULED', 'CHECKED_IN', 'COMPLETED', 'CANCELLED', 'NO_SHOW'] as const;
 
@@ -510,7 +489,7 @@ export function AppointmentsList(props: {
                       </TableCell>
                       <TableCell className="text-sm">{a.locationName}</TableCell>
                       <TableCell className="text-right">
-                        <Badge variant={statusVariant(a.status)}>{a.status}</Badge>
+                        <AppointmentStatusBadge status={a.status} />
                       </TableCell>
                       <TableCell className="text-right">
                         <AppointmentCheckinActions
@@ -547,9 +526,7 @@ export function AppointmentsList(props: {
                         )}
                         </div>
                       </div>
-                      <Badge variant={statusVariant(a.status)} className="shrink-0">
-                        {a.status}
-                      </Badge>
+                      <AppointmentStatusBadge status={a.status} className="shrink-0" />
                     </div>
                     <div>
                       <div className="text-xs font-medium text-muted-foreground">Client</div>
