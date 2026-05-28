@@ -164,7 +164,7 @@ const SEED_APPOINTMENT_TYPE_SPECS = [
   {
     name: 'Follow-up',
     description: 'Short follow-up visit',
-    durationMinutes: 20,
+    durationMinutes: 30,
     color: '#22c55e',
   },
   {

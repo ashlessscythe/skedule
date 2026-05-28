@@ -6,7 +6,11 @@ import { getTenantContext, requireAdmin } from '@/lib/tenant-context';
 const CreateAppointmentTypeSchema = z.object({
   name: z.string().min(1),
   description: z.string().optional().nullable(),
-  durationMinutes: z.number().int().min(1),
+  durationMinutes: z
+    .number()
+    .int()
+    .min(15)
+    .refine((v) => v % 15 === 0, 'Duration must be in 15-minute increments'),
   color: z.string().optional().nullable(),
 });
 

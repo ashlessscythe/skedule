@@ -21,6 +21,11 @@ import {
   SelectLabel,
   SelectTrigger,
 } from '@/components/ui/select';
+import {
+  DATETIME_LOCAL_QUARTER_HOUR_STEP,
+  roundDurationMinutesUp,
+  snapDateTimeLocalToQuarterHour,
+} from '@/lib/scheduling/time-increments';
 
 type Option = { id: string; label: string };
 type TypeOption = Option & { durationMinutes?: number };
@@ -81,7 +86,9 @@ export function CreateAppointmentDialog(props: {
   async function onCreate(e: React.FormEvent) {
     e.preventDefault();
     if (!canCreate) return;
-    const start = new Date(startTime);
+    const snappedStart = snapDateTimeLocalToQuarterHour(startTime);
+    if (snappedStart !== startTime) setStartTime(snappedStart);
+    const start = new Date(snappedStart);
     if (isNaN(start.getTime())) {
       setError('Please enter a valid start time.');
       return;
@@ -89,6 +96,11 @@ export function CreateAppointmentDialog(props: {
     if (durationMinutes % 15 !== 0) {
       setError('Duration must be in 15-minute increments.');
       return;
+    }
+    let recurrenceUntilSnapped = recurrenceUntil;
+    if (repeatEnabled && recurrenceEndMode === 'until' && recurrenceUntil) {
+      recurrenceUntilSnapped = snapDateTimeLocalToQuarterHour(recurrenceUntil);
+      if (recurrenceUntilSnapped !== recurrenceUntil) setRecurrenceUntil(recurrenceUntilSnapped);
     }
     setLoading(true);
     setError(null);
@@ -103,7 +115,7 @@ export function CreateAppointmentDialog(props: {
           : {
               frequency: recurrenceFrequency,
               interval: recurrenceInterval,
-              until: new Date(recurrenceUntil).toISOString(),
+              until: new Date(recurrenceUntilSnapped).toISOString(),
             }
         : undefined;
 
@@ -197,7 +209,8 @@ export function CreateAppointmentDialog(props: {
                 onValueChange={(v) => {
                   setTypeId(v ?? '');
                   const found = v ? props.types.find((t) => t.id === v) : undefined;
-                  if (found?.durationMinutes) setDurationMinutes(found.durationMinutes);
+                  if (found?.durationMinutes)
+                    setDurationMinutes(roundDurationMinutesUp(found.durationMinutes));
                 }}
               >
                 <SelectTrigger className="w-full">
@@ -248,8 +261,10 @@ export function CreateAppointmentDialog(props: {
               <Input
                 id="startTime"
                 type="datetime-local"
+                step={DATETIME_LOCAL_QUARTER_HOUR_STEP}
                 value={startTime}
                 onChange={(e) => setStartTime(e.target.value)}
+                onBlur={(e) => setStartTime(snapDateTimeLocalToQuarterHour(e.target.value))}
                 required
               />
             </div>
@@ -372,8 +387,12 @@ export function CreateAppointmentDialog(props: {
                     <Input
                       id="recUntil"
                       type="datetime-local"
+                      step={DATETIME_LOCAL_QUARTER_HOUR_STEP}
                       value={recurrenceUntil}
                       onChange={(e) => setRecurrenceUntil(e.target.value)}
+                      onBlur={(e) =>
+                        setRecurrenceUntil(snapDateTimeLocalToQuarterHour(e.target.value))
+                      }
                     />
                   </div>
                 )}

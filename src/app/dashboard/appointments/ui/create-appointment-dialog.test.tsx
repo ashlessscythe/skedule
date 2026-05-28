@@ -1,10 +1,14 @@
 /** @vitest-environment jsdom */
 
 import React from 'react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { CreateAppointmentDialog } from './create-appointment-dialog';
+
+afterEach(() => {
+  cleanup();
+});
 
 beforeEach(() => {
   vi.stubGlobal(
@@ -71,6 +75,26 @@ describe('CreateAppointmentDialog', () => {
 
     expect(typeof body.startTime).toBe('string');
     expect(new Date(body.startTime as string).toISOString()).toBe(body.startTime);
+  });
+
+  it('rounds service type duration up to 15-minute increments', async () => {
+    const user = userEvent.setup();
+    render(
+      <CreateAppointmentDialog
+        locations={[{ id: 'loc1', label: 'HQ' }]}
+        clients={[{ id: 'c1', label: 'Doe, Jane' }]}
+        staff={[]}
+        types={[{ id: 't1', label: 'Follow-up', durationMinutes: 20 }]}
+      />
+    );
+
+    await user.click(screen.getByRole('button', { name: /new appointment/i }));
+    const dialog = screen.getByRole('dialog', { name: /new appointment/i });
+    const [, , typeCombobox] = within(dialog).getAllByRole('combobox');
+    await user.click(typeCombobox!);
+    await user.click(await screen.findByRole('option', { name: 'Follow-up' }));
+
+    expect(within(dialog).getByText('30 min')).toBeInTheDocument();
   });
 });
 
