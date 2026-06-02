@@ -3,12 +3,6 @@ import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   test: {
-    environment: 'node',
-    environmentMatchGlobs: [
-      ['src/**/*.test.tsx', 'jsdom'],
-      ['src/app/dashboard/**/*.test.ts', 'jsdom'],
-    ],
-    include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
     setupFiles: ['src/test/setup.ts'],
     coverage: {
       provider: 'v8',
@@ -16,6 +10,25 @@ export default defineConfig({
       include: ['src/**/*'],
       exclude: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
     },
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: 'jsdom',
+          include: ['src/**/*.test.tsx', 'src/app/dashboard/**/*.test.ts'],
+          environment: 'jsdom',
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: 'node',
+          include: ['src/**/*.test.ts'],
+          exclude: ['src/app/dashboard/**/*.test.ts'],
+          environment: 'node',
+        },
+      },
+    ],
   },
   resolve: {
     alias: {
